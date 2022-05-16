@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/yolo">
+        <file>ncnn/models/yolov5s_6.0.param</file>
+        <file>ncnn/models/yolov5s_6.0.bin</file>
+        <file>ncnn/models/yolov4-tiny-opt.param</file>
+        <file>ncnn/models/yolov4-tiny-opt.bin</file>
+    </qresource>
+    <qresource prefix="/haarcascade">
+        <file>data/haarcascade_upperbody.xml</file>
+        <file>data/haarcascade_frontalface_alt.xml</file>
+        <file>data/haarcascade_eye_tree_eyeglasses.xml</file>
+    </qresource>
+</RCC>
