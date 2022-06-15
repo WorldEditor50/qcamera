@@ -15,6 +15,7 @@
 #include <QVector>
 #include <QDebug>
 #include <QThread>
+#include <QTimer>
 #include <functional>
 #include "logger.hpp"
 

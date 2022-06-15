@@ -178,7 +178,7 @@ void Yolov5::draw(cv::Mat &image, const QVector<Yolov5::Object> &objects)
     for (int i = 0; i < objects.size(); i++) {
         const Yolov5::Object& obj = objects[i];
 
-        cv::rectangle(image, obj.rect, cv::Scalar(255, 0, 0));
+        cv::rectangle(image, obj.rect, cv::Scalar(0, 255, 0));
 
         std::string text = Yolov5::labels[obj.label] + ":" + std::to_string(obj.prob * 100);
         int baseLine = 0;
@@ -193,10 +193,10 @@ void Yolov5::draw(cv::Mat &image, const QVector<Yolov5::Object> &objects)
             x = image.cols - label_size.width;
         }
         cv::rectangle(image, cv::Rect(cv::Point(x, y), cv::Size(label_size.width, label_size.height + baseLine)),
-                      cv::Scalar(0, 0, 0), 1);
+                      cv::Scalar(0, 255, 0), 1);
 
         cv::putText(image, text, cv::Point(x, y + label_size.height),
-                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0));
     }
     return;
 }

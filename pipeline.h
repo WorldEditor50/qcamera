@@ -9,6 +9,7 @@
 #include <condition_variable>
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <QVideoFrame>
 #include "libyuv.h"
 #include "libyuv/convert_argb.h"

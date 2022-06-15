@@ -90,6 +90,11 @@ void Camera::start(int devID)
 #endif
     settings.setResolution(QSize(w, h));
     device->setViewfinderSettings(settings);
+    /* focus */
+    device->searchAndLock();
+    QTimer::singleShot(500, Qt::PreciseTimer, this, [=](){
+        device->unlock();
+    });
     return;
 }
 

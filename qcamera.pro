@@ -19,6 +19,7 @@ SOURCES += \
     camera.cpp \
     cascade.cpp \
     configuration.cpp \
+    fasterrcnn.cpp \
     imageprocess.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     camera.h \
     cascade.h \
     configuration.h \
+    fasterrcnn.h \
     imageprocess.h \
     mainwindow.h \
     pipeline.h \
@@ -53,9 +55,9 @@ contains(ANDROID_TARGET_ARCH, arm64-v8a) {
     INCLUDEPATH += $$OPENCV_PATH/jni/include
     LIBS += -L$$OPENCV_PATH/libs/arm64-v8a -lopencv_java4
     # ncnn
-    #NCNN_PATH = $$PWD/ncnn/arm64-v8a
+    NCNN_PATH = $$PWD/ncnn/arm64-v8a
     #NCNN_PATH = $$PWD/ncnn-20220420-android-shared/arm64-v8a
-    NCNN_PATH = $$PWD/ncnn-20220420-android-vulkan-shared/arm64-v8a
+    #NCNN_PATH = $$PWD/ncnn-20220420-android-vulkan-shared/arm64-v8a
     INCLUDEPATH += $$NCNN_PATH/include/ncnn
     LIBS += -L$$NCNN_PATH/lib -lncnn
 

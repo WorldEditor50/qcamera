@@ -7,13 +7,6 @@ bool Yolov4::load(const std::string &modelType)
         return false;
     }
 
-#ifdef YOLOV4_TINY
-    const char* yolov4_param = "yolov4-tiny-opt.param";
-    const char* yolov4_model = "yolov4-tiny-opt.bin";
-#else
-    const char* yolov4_param = "yolov4-opt.param";
-    const char* yolov4_model = "yolov4-opt.bin";
-#endif
     std::string paramFile = modelType + ".param";
     std::string modelFile = modelType + ".bin";
     int ret = yolov4.load_param(paramFile.c_str());
@@ -35,10 +28,9 @@ void Yolov4::detect(const cv::Mat &image, QVector<Object> &objects)
     }
     int img_w = image.cols;
     int img_h = image.rows;
-
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(image.data,
                                                  ncnn::Mat::PIXEL_RGBA2RGB,
-                                                 image.cols, image.rows,
+                                                 img_w, img_h,
                                                  target_size, target_size);
 
     const float mean_vals[3] = {0, 0, 0};

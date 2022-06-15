@@ -38,7 +38,7 @@ public:
     ncnn::Mutex lock;
 private:
 #ifdef YOLOV4_TINY
-    constexpr static int target_size = 104;//416;
+    constexpr static int target_size = 416;//416;
 #else
     constexpr static int target_size = 608;
 #endif

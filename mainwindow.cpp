@@ -24,13 +24,14 @@ MainWindow::MainWindow(QWidget *parent)
     createMenu();
     /* load model */
     QtConcurrent::run([=](){
+        bool ret = true;
 #ifdef Q_OS_ANDROID
         QString modelPath = Configuration::instance().getModelPath();
-        bool ret = Yolov5::instance().load(QString("%1/yolov5s_6.0").arg(modelPath).toStdString());
+        ret = Yolov5::instance().load(QString("%1/yolov5s_6.0").arg(modelPath).toStdString());
         ret = Yolov4::instance().load(QString("%1/yolov4-tiny-opt").arg(modelPath).toStdString());
         ret = Cascade::instance().load(modelPath.toStdString());
 #else
-        bool ret = Yolov5::instance().load("/home/eigen/MySpace/models/ncnn-assets/models/yolov5s_6.0");
+        ret = Yolov5::instance().load("/home/eigen/MySpace/models/ncnn-assets/models/yolov5s_6.0");
         ret = Yolov4::instance().load("/home/eigen/MySpace/models/ncnn-assets/models/yolov4-tiny-opt");
         ret = Cascade::instance().load("");
 #endif

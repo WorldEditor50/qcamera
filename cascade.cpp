@@ -30,7 +30,7 @@ bool Cascade::load(const std::string &path)
 
 void Cascade::detect(cv::Mat &frame)
 {
-    if (hasLoadModel == true) {
+    if (hasLoadModel == false) {
         return;
     }
     cv::Mat gray;
