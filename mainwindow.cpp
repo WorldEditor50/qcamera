@@ -56,10 +56,6 @@ MainWindow::MainWindow(QWidget *parent)
     camera->setProcess([=](const QVideoFrame &frame) {
         Pipeline::instance().dispatch(frame);
     });
-    /* record */
-    connect(camera, &Camera::updateRecordTime, this, [=](const QString &sec){
-        statusBar()->showMessage(sec);
-    });
     /* pipeline */
     Pipeline::instance().start();
 }
@@ -82,7 +78,7 @@ void MainWindow::updateImage(const QImage &img)
 {
     QPixmap pixmap = QPixmap::fromImage(img);
     if (readyCapture.load()) {
-        QString dateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
+        QString dateTime = QDateTime::currentDateTime().toString("yyyyMMddhhmmss");
 #ifdef Q_OS_ANDROID
         QString picturePath = Configuration::instance().getPicturePath();
         QString path = QString("%1/%2%3").arg(picturePath).arg(dateTime).arg(".jpeg");
@@ -119,13 +115,19 @@ void MainWindow::setPage(int index)
 void MainWindow::startRecord()
 {
     QString videoPath = Configuration::instance().getVideoPath();
-    camera->startRecord(videoPath);
+    QString dateTime = QDateTime::currentDateTime().toString("yyyyMMddhhmmss");
+#ifdef Q_OS_ANDROID
+    QString fileName = QString("%1/%2%3").arg(videoPath).arg(dateTime).arg(".mp4");
+#else
+    QString fileName = QString("./%1%2").arg(dateTime).arg(".mp4");
+#endif
+    Recorder::instance().start(IMG_WIDTH, IMG_HEIGHT, AV_PIX_FMT_RGB32, fileName.toStdString());
     return;
 }
 
 void MainWindow::stopRecord()
 {
-    camera->stopRecord();
+    Recorder::instance().stop();
     statusBar()->showMessage("record completed.");
     return;
 }

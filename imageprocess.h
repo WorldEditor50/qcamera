@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+
 #include <QImage>
 #include <map>
 #include <functional>
@@ -51,15 +52,15 @@ public:
         }
         return img;
     }
-    static QImage canny(int width, int height, unsigned char* data);
-    static QImage sobel(int width, int height, unsigned char *data);
-    static QImage laplace(int width, int height, unsigned char* data);
-    static QImage haarcascade(int width, int height, unsigned char* data);
-    static QImage yolov4Detect(int width, int height, unsigned char* data);
-    static QImage yolov5Detect(int width, int height, unsigned char* data);
-    inline static QImage color(int width, int height, unsigned char* data)
+    static cv::Mat canny(int width, int height, unsigned char* data);
+    static cv::Mat sobel(int width, int height, unsigned char *data);
+    static cv::Mat laplace(int width, int height, unsigned char* data);
+    static cv::Mat haarcascade(int width, int height, unsigned char* data);
+    static cv::Mat yolov4Detect(int width, int height, unsigned char* data);
+    static cv::Mat yolov5Detect(int width, int height, unsigned char* data);
+    inline static cv::Mat color(int width, int height, unsigned char* data)
     {
-        return QImage(data, width, height, QImage::Format_ARGB32);
+        return cv::Mat(height, width, CV_8UC4, data);
     }
     inline static Process& instance()
     {

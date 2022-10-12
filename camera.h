@@ -31,6 +31,7 @@ public:
     void setProcess(std::function<void(const QVideoFrame &)> process_);
     void searchAndLock();
     void unlock();
+    static QImage imageFromVideoFrame(const QVideoFrame& buffer);
 signals:
     void recordError();
     void updateRecordTime(const QString &sec);

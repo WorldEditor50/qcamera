@@ -61,6 +61,7 @@ void Camera::start(int devID)
         resolutions.append(res);
     }
     /* recorder */
+#if 0
     recorder = new QMediaRecorder(device);
     connect(recorder, &QMediaRecorder::durationChanged, this, [=](){
         QString sec = QString("Recorded %1 sec").arg(recorder->duration()/1000);
@@ -81,6 +82,7 @@ void Camera::start(int devID)
     videoSettings.setBitRate(30);
     videoSettings.setResolution(w, h);
     recorder->setVideoSettings(videoSettings);
+#endif
     /* resolution */
     QCameraViewfinderSettings settings;
 #ifdef Q_OS_ANDROID
@@ -155,4 +157,29 @@ void Camera::pauseRecord()
 {
     recorder->pause();
     return;
+}
+
+QImage Camera::imageFromVideoFrame(const QVideoFrame& buffer)
+{
+    QImage img;
+    QVideoFrame frame(buffer);  // make a copy we can call map (non-const) on
+    frame.map(QAbstractVideoBuffer::ReadOnly);
+    QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(
+                frame.pixelFormat());
+    // BUT the frame.pixelFormat() is QVideoFrame::Format_Jpeg, and this is
+    // mapped to QImage::Format_Invalid by
+    // QVideoFrame::imageFormatFromPixelFormat
+    if (imageFormat != QImage::Format_Invalid) {
+        img = QImage(frame.bits(),
+                     frame.width(),
+                     frame.height(),
+                     // frame.bytesPerLine(),
+                     imageFormat);
+    } else {
+        // e.g. JPEG
+        int nbytes = frame.mappedBytes();
+        img = QImage::fromData(frame.bits(), nbytes);
+    }
+    frame.unmap();
+    return img;
 }

@@ -14,6 +14,7 @@
 #include "camera.h"
 #include "imageprocess.h"
 #include "setting.h"
+#include "recorder.h"
 #include "pipeline.h"
 #include "configuration.h"
 

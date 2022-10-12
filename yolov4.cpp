@@ -29,7 +29,7 @@ void Yolov4::detect(const cv::Mat &image, QVector<Object> &objects)
     int img_w = image.cols;
     int img_h = image.rows;
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(image.data,
-                                                 ncnn::Mat::PIXEL_RGBA2RGB,
+                                                 ncnn::Mat::PIXEL_RGBA,
                                                  img_w, img_h,
                                                  target_size, target_size);
 

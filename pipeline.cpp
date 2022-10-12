@@ -48,7 +48,8 @@ void Pipeline::stop()
     return;
 }
 
-Pipeline::Pipeline():QObject(nullptr)
+Pipeline::Pipeline():
+    QObject(nullptr)
 {
     /* method */
     mapper.insert(std::pair<std::string, Func>("canny", &Process::canny));
@@ -81,15 +82,13 @@ void Pipeline::impl()
             }
             frame = std::move(frameQueue.front());
             frameQueue.pop();
-            if (frameQueue.size() > max_video_queue_len) {
-                continue;
-            }
         }
         /* process */
         auto it = mapper.find(funcName);
         if (it == mapper.end()) {
             continue;
         }
+
         unsigned char* rgba = imgCache.get();
         if (rgba == nullptr) {
             continue;
@@ -100,17 +99,22 @@ void Pipeline::impl()
             imgCache.put(rgba);
             continue;
         }
-
-        QImage img = it->second(w, h, rgba);
-        if (img.isNull()) {
+        cv::Mat img = it->second(w, h, rgba);
+        if (img.empty()) {
             imgCache.put(rgba);
             continue;
         }
+        if (img.channels() != 4) {
+            cv::cvtColor(img, img, cv::COLOR_GRAY2RGBA);
+        }
+        QImage image = Process::mat2QImage(img);
 #ifdef Q_OS_ANDROID
-        img = img.transformed(matrix, Qt::FastTransformation);
+        image = image.transformed(matrix, Qt::FastTransformation);
 #endif
+        emit sendImage(image);
+        /* record */
+        Recorder::instance().rawEncode(img.data);
         imgCache.put(rgba);
-        emit sendImage(img);
     }
     return;
 }

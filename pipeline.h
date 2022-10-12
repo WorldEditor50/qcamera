@@ -11,9 +11,15 @@
 #include <string>
 #include <cstring>
 #include <QVideoFrame>
+#include <QFile>
+#include <QDateTime>
+#include <QAtomicInt>
 #include "libyuv.h"
 #include "libyuv/convert_argb.h"
 #include "imageprocess.h"
+#include "recorder.h"
+#include "transcode.h"
+
 #define IMG_WIDTH 640
 #define IMG_HEIGHT 480
 
@@ -84,10 +90,9 @@ public:
         STATE_EMPTY,
         STATE_TERMINATE
     };
-
-    using Func = std::function<QImage(int, int, unsigned char*)>;
+    using YuvToRgb = Transcode<IMG_WIDTH, IMG_HEIGHT, AV_PIX_FMT_YUYV422, AV_PIX_FMT_RGB32>;
+    using Func = std::function<cv::Mat(int, int, unsigned char*)>;
     constexpr static int max_thread_num = 4;
-    constexpr static int max_video_queue_len = 16;
     constexpr static int w = IMG_WIDTH;
     constexpr static int h = IMG_HEIGHT;
 private:
@@ -100,7 +105,6 @@ private:
     std::string funcName;
     ImageCache imgCache;
     QMatrix matrix;
-    int index;
 public:
     inline static Pipeline& instance()
     {

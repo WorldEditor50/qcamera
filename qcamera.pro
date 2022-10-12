@@ -19,7 +19,6 @@ SOURCES += \
     camera.cpp \
     cascade.cpp \
     configuration.cpp \
-    fasterrcnn.cpp \
     imageprocess.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -32,7 +31,6 @@ HEADERS += \
     camera.h \
     cascade.h \
     configuration.h \
-    fasterrcnn.h \
     imageprocess.h \
     mainwindow.h \
     pipeline.h \
@@ -45,7 +43,7 @@ FORMS += \
     mainwindow.ui \
     setting.ui
 include($$PWD/shared/shared.pri)
-
+include($$PWD/ffmpegutil/ffmpegutil.pri)
 contains(ANDROID_TARGET_ARCH, arm64-v8a) {
     # libyuv
     INCLUDEPATH += $$PWD/libyuv/include
@@ -60,6 +58,10 @@ contains(ANDROID_TARGET_ARCH, arm64-v8a) {
     #NCNN_PATH = $$PWD/ncnn-20220420-android-vulkan-shared/arm64-v8a
     INCLUDEPATH += $$NCNN_PATH/include/ncnn
     LIBS += -L$$NCNN_PATH/lib -lncnn
+    # ffmpeg
+    FFMPEG_PATH = /home/eigen/MySpace/MyGithub/qcamera/ffmpeg/arm64-v8a
+    INCLUDEPATH += $$FFMPEG_PATH/include
+    LIBS += -L$$FFMPEG_PATH -lffmpeg-debug
 
 } else {
     #libyuv
@@ -88,6 +90,17 @@ contains(ANDROID_TARGET_ARCH, arm64-v8a) {
     NCNN_PATH = /home/eigen/MySpace/3rdPartyLibrary/ncnn
     INCLUDEPATH += $$NCNN_PATH/include/ncnn
     LIBS += -L$$NCNN_PATH/lib -lncnn
+    # ffmpeg
+    FFMPEG_PATH = /home/eigen/MySpace/3rdPartyLibrary/ffmpeg-gpl-shared
+    INCLUDEPATH += $$FFMPEG_PATH/include
+    LIBS += -L$$FFMPEG_PATH/lib -lavdevice \
+                                -lavfilter \
+                                -lavformat \
+                                -lavcodec \
+                                -lswscale \
+                                -lswresample \
+                                -lavutil \
+                                -lpostproc
 }
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
