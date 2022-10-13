@@ -99,19 +99,26 @@ void Pipeline::impl()
             imgCache.put(rgba);
             continue;
         }
+
         cv::Mat img = it->second(w, h, rgba);
         if (img.empty()) {
             imgCache.put(rgba);
             continue;
         }
-        if (img.channels() != 4) {
-            cv::cvtColor(img, img, cv::COLOR_GRAY2RGBA);
+        if (img.channels() == 1) {
+            cv::cvtColor(img, img, cv::COLOR_GRAY2BGR);
+        } else if (img.channels() == 4) {
+            cv::cvtColor(img, img, cv::COLOR_RGBA2BGR);
         }
+#if USE_OPENGL
+        emit sendGlImage(img.cols, img.rows, img.data);
+#else
         QImage image = Process::mat2QImage(img);
 #ifdef Q_OS_ANDROID
         image = image.transformed(matrix, Qt::FastTransformation);
 #endif
         emit sendImage(image);
+#endif
         /* record */
         Recorder::instance().rawEncode(img.data);
         imgCache.put(rgba);

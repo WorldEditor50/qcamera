@@ -29,7 +29,7 @@ void Yolov4::detect(const cv::Mat &image, QVector<Object> &objects)
     int img_w = image.cols;
     int img_h = image.rows;
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(image.data,
-                                                 ncnn::Mat::PIXEL_RGBA,
+                                                 ncnn::Mat::PIXEL_RGBA2RGB,
                                                  img_w, img_h,
                                                  target_size, target_size);
 
@@ -99,10 +99,10 @@ void Yolov4::draw(cv::Mat &rgb, const QVector<Object> &objects)
         }
 
         cv::rectangle(rgb, cv::Rect(cv::Point(x, y), cv::Size(label_size.width, label_size.height + baseLine)),
-                      cv::Scalar(0, 0, 0), 1);
+                      cv::Scalar(0, 255, 0), 1);
 
         cv::putText(rgb, text, cv::Point(x, y + label_size.height),
-                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0));
     }
     return;
 }

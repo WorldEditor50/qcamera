@@ -53,7 +53,7 @@ void Yolov5::detect(const cv::Mat &image, QVector<Yolov5::Object> &objects)
     }
 
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(image.data,
-                                                 ncnn::Mat::PIXEL_RGBA,
+                                                 ncnn::Mat::PIXEL_RGBA2RGB,
                                                  img_w, img_h, w, h);
     // pad to target_size rectangle
     // yolov5/utils/datasets.py letterbox

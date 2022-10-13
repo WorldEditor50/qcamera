@@ -1,4 +1,4 @@
-QT       += core gui multimedia multimediawidgets network concurrent sql
+QT       += core gui multimedia multimediawidgets network concurrent sql opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -33,6 +33,7 @@ HEADERS += \
     configuration.h \
     imageprocess.h \
     mainwindow.h \
+    openglwidget.h \
     pipeline.h \
     setting.h \
     util.h \

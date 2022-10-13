@@ -22,7 +22,7 @@
 
 #define IMG_WIDTH 640
 #define IMG_HEIGHT 480
-
+#define USE_OPENGL 0
 class ImageCache
 {
 private:
@@ -118,6 +118,7 @@ public:
     void stop();
 signals:
     void sendImage(const QImage &img);
+    void sendGlImage(int w, int h, unsigned char* data);
 private:
     Pipeline();
     ~Pipeline();

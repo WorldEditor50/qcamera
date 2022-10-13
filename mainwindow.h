@@ -11,6 +11,7 @@
 #include <QEvent>
 #include <QDebug>
 #include <QtConcurrent/QtConcurrent>
+#include <QSurfaceFormat>
 #include "camera.h"
 #include "imageprocess.h"
 #include "setting.h"
@@ -27,8 +28,9 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     enum PageID {
-        PAGE_VIDEO = 0,
-        PAGE_SETTINGS
+        PAGE_OPENGL_VIDEO = 0,
+        PAGE_SETTINGS,
+        PAGE_VIDEO
     };
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -38,6 +40,7 @@ signals:
 public slots:
     void capture();
     void updateImage(const QImage &img);
+    void updateGL(int w, int h, unsigned char* data);
     void setPage(int index);
     void startRecord();
     void stopRecord();
@@ -51,8 +54,6 @@ private:
     Ui::MainWindow *ui;
     int pageID;
     bool readyQuit;
-    QLabel *videoLabel;
-    Setting *setting;
     Camera *camera;
     QAtomicInt readyCapture;
 };

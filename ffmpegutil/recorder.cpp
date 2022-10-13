@@ -173,7 +173,7 @@ int Recorder::encode(AVFrame *frame)
     yuv420pFrame->pts = pts++;
     int ret = avcodec_send_frame(codecContext, yuv420pFrame);
     if (ret < 0) {
-        std::cout<<"Error sending a frame to the encoder:"<<av_err2str(ret)<<std::endl;
+        std::cout<<"Error sending a frame to the encoder:"<<ret<<std::endl;
         return -1;
     }
     while (ret >= 0) {
@@ -181,7 +181,7 @@ int Recorder::encode(AVFrame *frame)
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
             return 0;
         } else if (ret < 0) {
-            std::cout<<"Error encoding a frame: "<<av_err2str(ret)<<std::endl;
+            std::cout<<"Error encoding a frame: "<<ret<<std::endl;
             return -1;
         }
 
@@ -195,7 +195,7 @@ int Recorder::encode(AVFrame *frame)
          * its contents and resets pkt), so that no unreferencing is necessary.
          * This would be different if one used av_write_frame(). */
         if (ret < 0) {
-            std::cout<<"Error while writing output packet: "<< av_err2str(ret)<<std::endl;
+            std::cout<<"Error while writing output packet: "<<ret<<std::endl;
             return -1;
         }
         av_packet_unref(packet);

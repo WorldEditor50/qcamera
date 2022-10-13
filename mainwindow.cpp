@@ -9,12 +9,19 @@ MainWindow::MainWindow(QWidget *parent)
     , readyCapture(0)
 {
     ui->setupUi(this);
-    /* stacked widget */
-    videoLabel = new QLabel(ui->stackedWidget);
-    ui->stackedWidget->insertWidget(0, videoLabel);
-    setting = new Setting(ui->stackedWidget);
-    ui->stackedWidget->insertWidget(1, setting);
-    ui->stackedWidget->setCurrentIndex(0);
+    /* opengl */
+#if USE_OPENGL
+    QSurfaceFormat format;
+    format.setDepthBufferSize(24);
+    format.setStencilBufferSize(8);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    ui->openGLWidget->setFormat(format);
+    ui->stackedWidget->setCurrentIndex(PAGE_OPENGL_VIDEO);
+#else
+    ui->stackedWidget->setCurrentIndex(PAGE_VIDEO);
+    ui->videoLabel->show();
+#endif
+
 #ifdef Q_OS_ANDROID
     setAttribute(Qt::WA_AcceptTouchEvents);
 #else
@@ -46,12 +53,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this, &MainWindow::send, this, &MainWindow::updateImage, Qt::QueuedConnection);
     Camera::infoList = QCameraInfo::availableCameras();
     /* start camera */
-    //int index = ui->deviceComboBox->currentText().toInt();
     camera = new Camera(this);
     camera->start(0);
-    setting->setDevice(camera);
+    ui->settingWidget->setDevice(camera);
+#if USE_OPENGL
+    connect(&Pipeline::instance(), &Pipeline::sendGlImage,
+            this, &MainWindow::updateGL, Qt::QueuedConnection);
+#else
     connect(&Pipeline::instance(), &Pipeline::sendImage,
             this, &MainWindow::updateImage, Qt::QueuedConnection);
+#endif
     Pipeline::instance().setFuncName("color");
     camera->setProcess([=](const QVideoFrame &frame) {
         Pipeline::instance().dispatch(frame);
@@ -89,7 +100,26 @@ void MainWindow::updateImage(const QImage &img)
         statusBar()->showMessage(path);
         readyCapture.store(0);
     }
-    videoLabel->setPixmap(pixmap.scaled(videoLabel->size()));
+    ui->videoLabel->setPixmap(pixmap.scaled(ui->videoLabel->size()));
+    return;
+}
+
+void MainWindow::updateGL(int w, int h, unsigned char *data)
+{
+    if (readyCapture.load()) {
+        QString dateTime = QDateTime::currentDateTime().toString("yyyyMMddhhmmss");
+#ifdef Q_OS_ANDROID
+        QString picturePath = Configuration::instance().getPicturePath();
+        QString path = QString("%1/%2%3").arg(picturePath).arg(dateTime).arg(".jpeg");
+#else
+        QString path = QString("./%1%2").arg(dateTime).arg(".jpeg");
+#endif
+        QImage img(data, w, h, QImage::Format_ARGB32);
+        img.save(path);
+        statusBar()->showMessage(path);
+        readyCapture.store(0);
+    }
+    ui->openGLWidget->setFrame(w, h, data);
     return;
 }
 
@@ -99,11 +129,17 @@ void MainWindow::setPage(int index)
         return;
     }
     switch (index) {
+    case PAGE_OPENGL_VIDEO:
+        ui->stackedWidget->setCurrentIndex(PAGE_OPENGL_VIDEO);
+        ui->openGLWidget->show();
+        break;
     case PAGE_VIDEO:
-        ui->stackedWidget->setCurrentWidget(videoLabel);
+        ui->stackedWidget->setCurrentIndex(PAGE_VIDEO);
+        ui->videoLabel->show();
         break;
     case PAGE_SETTINGS:
-        ui->stackedWidget->setCurrentWidget(setting);
+        ui->stackedWidget->setCurrentIndex(PAGE_SETTINGS);
+        ui->settingWidget->show();
         break;
     default:
         break;
@@ -121,14 +157,15 @@ void MainWindow::startRecord()
 #else
     QString fileName = QString("./%1%2").arg(dateTime).arg(".mp4");
 #endif
-    Recorder::instance().start(IMG_WIDTH, IMG_HEIGHT, AV_PIX_FMT_RGB32, fileName.toStdString());
+    Recorder::instance().start(IMG_WIDTH, IMG_HEIGHT, AV_PIX_FMT_RGB24, fileName.toStdString());
+    statusBar()->showMessage("Recording");
     return;
 }
 
 void MainWindow::stopRecord()
 {
     Recorder::instance().stop();
-    statusBar()->showMessage("record completed.");
+    statusBar()->showMessage("Record completed.");
     return;
 }
 
@@ -185,7 +222,7 @@ void MainWindow::createMenu()
     ui->menu->addAction(settingAction);
     /* camera */
     QAction *cameraAction = new QAction(tr("Camera"), this);
-    connect(cameraAction, &QAction::triggered, this, [=](){setPage(0);});
+    connect(cameraAction, &QAction::triggered, this, [=](){setPage(2);});
     ui->menu->addAction(cameraAction);
     /* method */
     QAction *canny = new QAction(tr("canny"), this);

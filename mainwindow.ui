@@ -26,7 +26,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -41,8 +41,49 @@
     </property>
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
-      <widget class="QWidget" name="page"/>
-      <widget class="QWidget" name="page_2"/>
+      <widget class="QWidget" name="videoGLWidget">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="OpenGLWidget" name="openGLWidget"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="Setting" name="settingWidget"/>
+      <widget class="QWidget" name="videoWidget">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="videoLabel">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -65,6 +106,19 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Setting</class>
+   <extends>QWidget</extends>
+   <header>setting.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>OpenGLWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header location="global">openglwidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
