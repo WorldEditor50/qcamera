@@ -4,6 +4,8 @@
         <file>ncnn/models/yolov5s_6.0.bin</file>
         <file>ncnn/models/yolov4-tiny-opt.param</file>
         <file>ncnn/models/yolov4-tiny-opt.bin</file>
+        <file>ncnn/models/yolov7-tiny.param</file>
+        <file>ncnn/models/yolov7-tiny.bin</file>
     </qresource>
     <qresource prefix="/haarcascade">
         <file>data/haarcascade_upperbody.xml</file>

@@ -1,21 +1,18 @@
 #include "yolov5.h"
-
-bool Yolov5::load(const std::string &modelType)
+Yolov5::Yolov5()
 {
-    if (modelType.empty()) {
-        return false;
-    }
-    std::string paramFile = modelType + ".param";
-    std::string modelFile = modelType + ".bin";
-    int ret = yolov5.load_param(paramFile.c_str());
-    if (ret != 0) {
-        return false;
-    }
-    ret = yolov5.load_model(modelFile.c_str());
-    if (ret != 0) {
-        return false;
-    }
-    labels = {
+    blob_pool_allocator.set_size_compare_ratio(0.f);
+    workspace_pool_allocator.set_size_compare_ratio(0.f);
+    blob_pool_allocator.clear();
+    workspace_pool_allocator.clear();
+    net.opt.blob_allocator = &blob_pool_allocator;
+    net.opt.workspace_allocator = &workspace_pool_allocator;
+#ifdef Q_OS_ANDROID
+    net.opt.use_vulkan_compute = true;
+#else
+    net.opt.use_vulkan_compute = false;
+#endif
+    classNames = {
         "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
         "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
         "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
@@ -26,15 +23,14 @@ bool Yolov5::load(const std::string &modelType)
         "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
         "hair drier", "toothbrush"
     };
-    hasLoadModel = true;
-    return true;
 }
 
-void Yolov5::detect(const cv::Mat &image, QVector<Yolov5::Object> &objects)
+int Yolov5::detect(const cv::Mat &image, std::vector<Object> &objects)
 {
     if (hasLoadModel == false) {
-        return;
+        return -1;
     }
+    ncnn::MutexLockGuard guard(lock);
     int img_w = image.cols;
     int img_h = image.rows;
 
@@ -66,11 +62,11 @@ void Yolov5::detect(const cv::Mat &image, QVector<Yolov5::Object> &objects)
     const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
     in_pad.substract_mean_normalize(mean_vals, norm_vals);
 
-    ncnn::Extractor ex = yolov5.create_extractor();
+    ncnn::Extractor ex = net.create_extractor();
 
     ex.input("images", in_pad);
 
-    QVector<Object> proposals;
+    std::vector<Object> proposals;
 
     // anchor setting from yolov5/models/yolov5s.yaml
 
@@ -87,11 +83,10 @@ void Yolov5::detect(const cv::Mat &image, QVector<Yolov5::Object> &objects)
         anchors[4] = 33.f;
         anchors[5] = 23.f;
 
-        QVector<Object> objects8;
+        std::vector<Object> objects8;
         generate_proposals(anchors, 8, in_pad, out, prob_threshold, objects8);
 
-        proposals.append(objects8);
-        //proposals.insert(proposals.end(), objects8.begin(), objects8.end());
+        proposals.insert(proposals.end(), objects8.begin(), objects8.end());
     }
 
     // stride 16
@@ -111,10 +106,9 @@ void Yolov5::detect(const cv::Mat &image, QVector<Yolov5::Object> &objects)
         anchors[4] = 59.f;
         anchors[5] = 119.f;
 
-        QVector<Object> objects16;
+        std::vector<Object> objects16;
         generate_proposals(anchors, 16, in_pad, out, prob_threshold, objects16);
-        proposals.append(objects16);
-        //proposals.insert(proposals.end(), objects16.begin(), objects16.end());
+        proposals.insert(proposals.end(), objects16.begin(), objects16.end());
     }
 
     // stride 32
@@ -133,17 +127,16 @@ void Yolov5::detect(const cv::Mat &image, QVector<Yolov5::Object> &objects)
         anchors[4] = 373.f;
         anchors[5] = 326.f;
 
-        QVector<Object> objects32;
+        std::vector<Object> objects32;
         generate_proposals(anchors, 32, in_pad, out, prob_threshold, objects32);
-        proposals.append(objects32);
-        //proposals.insert(proposals.end(), objects32.begin(), objects32.end());
+        proposals.insert(proposals.end(), objects32.begin(), objects32.end());
     }
 
     // sort all proposals by score from highest to lowest
     qsort_descent_inplace(proposals);
 
     // apply nms with nms_threshold
-    QVector<int> picked;
+    std::vector<int> picked;
     nms_sorted_bboxes(proposals, picked, nms_threshold);
 
     int count = picked.size();
@@ -170,205 +163,5 @@ void Yolov5::detect(const cv::Mat &image, QVector<Yolov5::Object> &objects)
         objects[i].rect.width = x1 - x0;
         objects[i].rect.height = y1 - y0;
     }
-    return;
-}
-
-void Yolov5::draw(cv::Mat &image, const QVector<Yolov5::Object> &objects)
-{
-    for (int i = 0; i < objects.size(); i++) {
-        const Yolov5::Object& obj = objects[i];
-
-        cv::rectangle(image, obj.rect, cv::Scalar(0, 255, 0));
-
-        std::string text = Yolov5::labels[obj.label] + ":" + std::to_string(obj.prob * 100);
-        int baseLine = 0;
-        cv::Size label_size = cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-
-        int x = obj.rect.x;
-        int y = obj.rect.y - label_size.height - baseLine;
-        if (y < 0) {
-            y = 0;
-        }
-        if (x + label_size.width > image.cols) {
-            x = image.cols - label_size.width;
-        }
-        cv::rectangle(image, cv::Rect(cv::Point(x, y), cv::Size(label_size.width, label_size.height + baseLine)),
-                      cv::Scalar(0, 255, 0), 1);
-
-        cv::putText(image, text, cv::Point(x, y + label_size.height),
-                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0));
-    }
-    return;
-}
-
-Yolov5::Yolov5():hasLoadModel(false)
-{
-    blob_pool_allocator.set_size_compare_ratio(0.f);
-    workspace_pool_allocator.set_size_compare_ratio(0.f);
-    blob_pool_allocator.clear();
-    workspace_pool_allocator.clear();
-    yolov5.opt.blob_allocator = &blob_pool_allocator;
-    yolov5.opt.workspace_allocator = &workspace_pool_allocator;
-#ifdef Q_OS_ANDROID
-    yolov5.opt.use_vulkan_compute = true;
-#else
-    yolov5.opt.use_vulkan_compute = false;
-#endif
-}
-
-void Yolov5::qsort_descent_inplace(QVector<Object> &objects, int left, int right)
-{
-    int i = left;
-    int j = right;
-    float p = objects[(left + right) / 2].prob;
-
-    while (i <= j) {
-        while (objects[i].prob > p)
-            i++;
-
-        while (objects[j].prob < p)
-            j--;
-
-        if (i <= j) {
-            // swap
-            std::swap(objects[i], objects[j]);
-            i++;
-            j--;
-        }
-    }
-
-    #pragma omp parallel sections
-    {
-        #pragma omp section
-        {
-            if (left < j) qsort_descent_inplace(objects, left, j);
-        }
-        #pragma omp section
-        {
-            if (i < right) qsort_descent_inplace(objects, i, right);
-        }
-    }
-    return;
-}
-
-void Yolov5::qsort_descent_inplace(QVector<Object>& objects)
-{
-    if (objects.empty()) {
-        return;
-    }
-    qsort_descent_inplace(objects, 0, objects.size() - 1);
-    return;
-}
-
-void Yolov5::generate_proposals(const ncnn::Mat &anchors, int stride, const ncnn::Mat &in_pad, const ncnn::Mat &feat_blob, float prob_threshold, QVector<Object> &objects)
-{
-    const int num_grid = feat_blob.h;
-
-    int num_grid_x;
-    int num_grid_y;
-    if (in_pad.w > in_pad.h) {
-        num_grid_x = in_pad.w / stride;
-        num_grid_y = num_grid / num_grid_x;
-    } else {
-        num_grid_y = in_pad.h / stride;
-        num_grid_x = num_grid / num_grid_y;
-    }
-
-    const int num_class = feat_blob.w - 5;
-
-    const int num_anchors = anchors.w / 2;
-
-    for (int q = 0; q < num_anchors; q++) {
-        const float anchor_w = anchors[q * 2];
-        const float anchor_h = anchors[q * 2 + 1];
-
-        const ncnn::Mat feat = feat_blob.channel(q);
-
-        for (int i = 0; i < num_grid_y; i++) {
-            for (int j = 0; j < num_grid_x; j++) {
-                const float* featptr = feat.row(i * num_grid_x + j);
-
-                // find class index with max class score
-                int class_index = 0;
-                float class_score = -1;
-                for (int k = 0; k < num_class; k++) {
-                    float score = featptr[5 + k];
-                    if (score > class_score) {
-                        class_index = k;
-                        class_score = score;
-                    }
-                }
-
-                float box_score = featptr[4];
-
-                float confidence = sigmoid(box_score) * sigmoid(class_score);
-
-                if (confidence >= prob_threshold) {
-                    // yolov5/models/yolo.py Detect forward
-                    // y = x[i].sigmoid()
-                    // y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
-                    // y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
-
-                    float dx = sigmoid(featptr[0]);
-                    float dy = sigmoid(featptr[1]);
-                    float dw = sigmoid(featptr[2]);
-                    float dh = sigmoid(featptr[3]);
-
-                    float pb_cx = (dx * 2.f - 0.5f + j) * stride;
-                    float pb_cy = (dy * 2.f - 0.5f + i) * stride;
-
-                    float pb_w = pow(dw * 2.f, 2) * anchor_w;
-                    float pb_h = pow(dh * 2.f, 2) * anchor_h;
-
-                    float x0 = pb_cx - pb_w * 0.5f;
-                    float y0 = pb_cy - pb_h * 0.5f;
-                    float x1 = pb_cx + pb_w * 0.5f;
-                    float y1 = pb_cy + pb_h * 0.5f;
-
-                    Object obj;
-                    obj.rect.x = x0;
-                    obj.rect.y = y0;
-                    obj.rect.width = x1 - x0;
-                    obj.rect.height = y1 - y0;
-                    obj.label = class_index;
-                    obj.prob = confidence;
-
-                    objects.push_back(obj);
-                }
-            }
-        }
-    }
-    return;
-}
-
-void Yolov5::nms_sorted_bboxes(const QVector<Yolov5::Object> &objects, QVector<int> &picked, float nms_threshold)
-{
-    picked.clear();
-
-    const int n = objects.size();
-
-    std::vector<float> areas(n);
-    for (int i = 0; i < n; i++) {
-        areas[i] = objects[i].rect.area();
-    }
-
-    for (int i = 0; i < n; i++) {
-        const Yolov5::Object& a = objects[i];
-
-        int keep = 1;
-        for (int j = 0; j < (int)picked.size(); j++) {
-            const Yolov5::Object& b = objects[picked[j]];
-
-            // intersection over union
-            float inter_area = intersection_area(a, b);
-            float union_area = areas[i] + areas[picked[j]] - inter_area;
-            // float IoU = inter_area / union_area
-            if (inter_area / union_area > nms_threshold)
-                keep = 0;
-        }
-
-        if (keep)
-            picked.push_back(i);
-    }
-    return;
+    return 0;
 }

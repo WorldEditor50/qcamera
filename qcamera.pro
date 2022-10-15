@@ -24,8 +24,10 @@ SOURCES += \
     mainwindow.cpp \
     pipeline.cpp \
     setting.cpp \
+    yolo.cpp \
     yolov4.cpp \
-    yolov5.cpp
+    yolov5.cpp \
+    yolov7.cpp
 
 HEADERS += \
     camera.h \
@@ -37,8 +39,10 @@ HEADERS += \
     pipeline.h \
     setting.h \
     util.h \
+    yolo.h \
     yolov4.h \
-    yolov5.h
+    yolov5.h \
+    yolov7.h
 
 FORMS += \
     mainwindow.ui \
@@ -55,8 +59,6 @@ contains(ANDROID_TARGET_ARCH, arm64-v8a) {
     LIBS += -L$$OPENCV_PATH/libs/arm64-v8a -lopencv_java4
     # ncnn
     NCNN_PATH = $$PWD/ncnn/arm64-v8a
-    #NCNN_PATH = $$PWD/ncnn-20220420-android-shared/arm64-v8a
-    #NCNN_PATH = $$PWD/ncnn-20220420-android-vulkan-shared/arm64-v8a
     INCLUDEPATH += $$NCNN_PATH/include/ncnn
     LIBS += -L$$NCNN_PATH/lib -lncnn
     # ffmpeg

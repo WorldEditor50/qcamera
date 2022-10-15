@@ -44,8 +44,8 @@ int Recorder::start(int width, int height, AVPixelFormat pixelFormat_, const std
     }
     codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
     codecContext->bit_rate = 400000; //sharpness
-    codecContext->gop_size = 64;
-    codecContext->framerate.num = 5;// play speed
+    codecContext->gop_size = 256;
+    codecContext->framerate.num = 25;// play speed
     codecContext->framerate.den = 1;
     codecContext->time_base = av_inv_q(codecContext->framerate);
     codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -53,10 +53,21 @@ int Recorder::start(int width, int height, AVPixelFormat pixelFormat_, const std
     codecContext->height = height;
     codecContext->sample_aspect_ratio.num = width;
     codecContext->sample_aspect_ratio.den = height;
+
     if (codecContext->codec_id == AV_CODEC_ID_H264) {
+        codecContext->profile = FF_PROFILE_H264_BASELINE;
+        codecContext->max_b_frames = 2;
+        codecContext->max_qdiff = 4;
+        codecContext->me_range = 16;
+        codecContext->me_cmp |= 1;
+        codecContext->me_subpel_quality = 6;
         codecContext->qmin = 10;
         codecContext->qmax = 51;
         codecContext->qcompress = 0.6;
+        codecContext->keyint_min = 25;
+        codecContext->trellis = 0;
+        codecContext->level = 13;
+        codecContext->refs = 1;
         av_opt_set(codecContext->priv_data, "preset", "slow", 0);
     } else if (codecContext->codec_id == AV_CODEC_ID_MPEG2VIDEO){
         codecContext->max_b_frames = 2;
@@ -86,6 +97,7 @@ int Recorder::start(int width, int height, AVPixelFormat pixelFormat_, const std
     ret = avio_open(&formatContext->pb, videoName.c_str(), AVIO_FLAG_WRITE);
     if (ret != 0) {
         std::cout<<"avio_open  failed!\n"<<std::endl;
+        state = STATE_NONE;
         return -1;
     }
     /* header */
@@ -205,11 +217,13 @@ int Recorder::encode(AVFrame *frame)
 
 void Recorder::stop()
 {
-    std::lock_guard<std::mutex> guard(mutex);
-    if (state == STATE_NONE) {
-        return;
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        if (state == STATE_NONE) {
+            return;
+        }
+        state = STATE_FINISHED;
     }
-    state = STATE_FINISHED;
     std::this_thread::sleep_for(std::chrono::seconds(1));
     /* flush */
     av_write_trailer(formatContext);

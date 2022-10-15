@@ -10,11 +10,13 @@
 #include <functional>
 #include <cmath>
 #include <string>
-#include "yolov5.h"
+#include <iostream>
 #include "yolov4.h"
+#include "yolov5.h"
+#include "yolov7.h"
 #include "cascade.h"
 
-class Process
+class Improcess
 {
 public:
     enum FuncType {
@@ -56,19 +58,20 @@ public:
     static cv::Mat sobel(int width, int height, unsigned char *data);
     static cv::Mat laplace(int width, int height, unsigned char* data);
     static cv::Mat haarcascade(int width, int height, unsigned char* data);
-    static cv::Mat yolov4Detect(int width, int height, unsigned char* data);
-    static cv::Mat yolov5Detect(int width, int height, unsigned char* data);
+    static cv::Mat yolov4(int width, int height, unsigned char* data);
+    static cv::Mat yolov5(int width, int height, unsigned char* data);
+    static cv::Mat yolov7(int width, int height, unsigned char* data);
     inline static cv::Mat color(int width, int height, unsigned char* data)
     {
         return cv::Mat(height, width, CV_8UC4, data);
     }
-    inline static Process& instance()
+    inline static Improcess& instance()
     {
-        static Process process;
+        static Improcess process;
         return process;
     }
 private:
-    Process(){}
+    Improcess(){}
 };
 
 #endif // IMAGEPROCESS_H

@@ -1,7 +1,7 @@
 #include "imageprocess.h"
 #include <QDebug>
 
-cv::Mat Process::canny(int width, int height, unsigned char *data)
+cv::Mat Improcess::canny(int width, int height, unsigned char *data)
 {
     cv::Mat src(height, width, CV_8UC4, data);
     cv::cvtColor(src, src, cv::COLOR_RGBA2GRAY);
@@ -10,7 +10,7 @@ cv::Mat Process::canny(int width, int height, unsigned char *data)
     return src;
 }
 
-cv::Mat Process::sobel(int width, int height, unsigned char *data)
+cv::Mat Improcess::sobel(int width, int height, unsigned char *data)
 {
     cv::Mat src(height, width, CV_8UC4, data);
     /* gray */
@@ -30,7 +30,7 @@ cv::Mat Process::sobel(int width, int height, unsigned char *data)
     return src;
 }
 
-cv::Mat Process::laplace(int width, int height, unsigned char *data)
+cv::Mat Improcess::laplace(int width, int height, unsigned char *data)
 {
     /* laplace  */
     cv::Mat src(height, width, CV_8UC4, data);
@@ -44,14 +44,14 @@ cv::Mat Process::laplace(int width, int height, unsigned char *data)
     return dst;
 }
 
-cv::Mat Process::haarcascade(int width, int height, unsigned char *data)
+cv::Mat Improcess::haarcascade(int width, int height, unsigned char *data)
 {
     cv::Mat src(height, width, CV_8UC4, data);
     Cascade::instance().detect(src);
     return src;
 }
 
-cv::Mat Process::yolov4Detect(int width, int height, unsigned char *data)
+cv::Mat Improcess::yolov4(int width, int height, unsigned char *data)
 {
     cv::Mat src(height, width, CV_8UC4, data);
     {
@@ -63,15 +63,21 @@ cv::Mat Process::yolov4Detect(int width, int height, unsigned char *data)
     return src;
 }
 
-cv::Mat Process::yolov5Detect(int width, int height, unsigned char *data)
+cv::Mat Improcess::yolov5(int width, int height, unsigned char *data)
 {
     cv::Mat src(height, width, CV_8UC4, data);
-    {
-        ncnn::MutexLockGuard guard(Yolov5::instance().lock);
-        QVector<Yolov5::Object> objects;
-        Yolov5::instance().detect(src, objects);
-        Yolov5::instance().draw(src, objects);
-    }
+    std::vector<Object> objects;
+    Yolov5::instance().detect(src, objects);
+    Yolov5::instance().draw(src, objects);
+    return src;
+}
+
+cv::Mat Improcess::yolov7(int width, int height, unsigned char *data)
+{
+    cv::Mat src(height, width, CV_8UC4, data);
+    std::vector<Object> objects;
+    Yolov7::instance().detect(src, objects);
+    Yolov7::instance().draw(src, objects);
     return src;
 }
 

@@ -34,10 +34,12 @@ MainWindow::MainWindow(QWidget *parent)
         bool ret = true;
 #ifdef Q_OS_ANDROID
         QString modelPath = Configuration::instance().getModelPath();
+        ret = Yolov7::instance().load(QString("%1/yolov7-tiny").arg(modelPath).toStdString());
         ret = Yolov5::instance().load(QString("%1/yolov5s_6.0").arg(modelPath).toStdString());
         ret = Yolov4::instance().load(QString("%1/yolov4-tiny-opt").arg(modelPath).toStdString());
         ret = Cascade::instance().load(modelPath.toStdString());
 #else
+        ret = Yolov7::instance().load("/home/eigen/MySpace/models/ncnn-assets/models/yolov7-tiny");
         ret = Yolov5::instance().load("/home/eigen/MySpace/models/ncnn-assets/models/yolov5s_6.0");
         ret = Yolov4::instance().load("/home/eigen/MySpace/models/ncnn-assets/models/yolov4-tiny-opt");
         ret = Cascade::instance().load("");
@@ -243,6 +245,9 @@ void MainWindow::createMenu()
     QAction *yolov5 = new QAction(tr("yolov5"), this);
     connect(yolov5, &QAction::triggered, this, [=](){setProcessFunc("yolov5");});
     ui->menu->addAction(yolov5);
+    QAction *yolov7 = new QAction(tr("yolov7"), this);
+    connect(yolov7, &QAction::triggered, this, [=](){setProcessFunc("yolov7");});
+    ui->menu->addAction(yolov7);
     QAction *linear = new QAction(tr("color"), this);
     connect(linear, &QAction::triggered, this, [=](){setProcessFunc("color");});
     ui->menu->addAction(linear);

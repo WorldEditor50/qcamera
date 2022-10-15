@@ -52,13 +52,14 @@ Pipeline::Pipeline():
     QObject(nullptr)
 {
     /* method */
-    mapper.insert(std::pair<std::string, Func>("canny", &Process::canny));
-    mapper.insert(std::pair<std::string, Func>("sobel", &Process::sobel));
-    mapper.insert(std::pair<std::string, Func>("laplace", &Process::laplace));
-    mapper.insert(std::pair<std::string, Func>("haarcascade", &Process::haarcascade));
-    mapper.insert(std::pair<std::string, Func>("yolov4", &Process::yolov4Detect));
-    mapper.insert(std::pair<std::string, Func>("yolov5", &Process::yolov5Detect));
-    mapper.insert(std::pair<std::string, Func>("color", &Process::color));
+    mapper.insert(std::pair<std::string, Func>("canny", &Improcess::canny));
+    mapper.insert(std::pair<std::string, Func>("sobel", &Improcess::sobel));
+    mapper.insert(std::pair<std::string, Func>("laplace", &Improcess::laplace));
+    mapper.insert(std::pair<std::string, Func>("haarcascade", &Improcess::haarcascade));
+    mapper.insert(std::pair<std::string, Func>("yolov4", &Improcess::yolov4));
+    mapper.insert(std::pair<std::string, Func>("yolov5", &Improcess::yolov5));
+    mapper.insert(std::pair<std::string, Func>("yolov7", &Improcess::yolov7));
+    mapper.insert(std::pair<std::string, Func>("color", &Improcess::color));
     matrix.rotate(90.0);
     /* function */
     funcName = "color";
@@ -113,7 +114,7 @@ void Pipeline::impl()
 #if USE_OPENGL
         emit sendGlImage(img.cols, img.rows, img.data);
 #else
-        QImage image = Process::mat2QImage(img);
+        QImage image = Improcess::mat2QImage(img);
 #ifdef Q_OS_ANDROID
         image = image.transformed(matrix, Qt::FastTransformation);
 #endif

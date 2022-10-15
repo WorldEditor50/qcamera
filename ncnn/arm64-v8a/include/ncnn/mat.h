@@ -30,11 +30,7 @@
 #include <msa.h>
 #endif
 #if __riscv_vector
-#ifdef RVV_SPEC_0_7
-#include "layer/riscv/riscv_v_071_fix.h"
-#else
 #include <riscv_vector.h>
-#endif
 #include "cpu.h" // cpu_riscv_vlenb()
 #endif
 
@@ -124,7 +120,7 @@ public:
 #if __AVX512F__
     void fill(__m512 _v);
 #endif // __AVX512F__
-    void fill(__m256 _v);
+    void fill(__m256 _v, int i = 0);
 #endif // __AVX__
     void fill(__m128 _v);
     void fill(__m128i _v);
@@ -759,16 +755,6 @@ NCNN_EXPORT NCNN_FORCEINLINE float bfloat16_to_float32(unsigned short value)
     tmp.u = value << 16;
     return tmp.f;
 }
-#if __ARM_NEON
-NCNN_EXPORT NCNN_FORCEINLINE uint16x4_t vcvt_bf16_f32(float32x4_t _v)
-{
-    return vshrn_n_u32(vreinterpretq_u32_f32(_v), 16);
-}
-NCNN_EXPORT NCNN_FORCEINLINE float32x4_t vcvt_f32_bf16(uint16x4_t _v)
-{
-    return vreinterpretq_f32_u32(vshll_n_u16(_v, 16));
-}
-#endif // __ARM_NEON
 
 // mat process
 enum BorderType
@@ -913,48 +899,16 @@ NCNN_FORCEINLINE void Mat::fill(float _v)
     int size = (int)total();
     float* ptr = (float*)data;
 
-#if __ARM_NEON
-    int nn = size >> 2;
-    int remain = size - (nn << 2);
-#else
-    int remain = size;
-#endif // __ARM_NEON
-
+    int i = 0;
 #if __ARM_NEON
     float32x4_t _c = vdupq_n_f32(_v);
-#if __aarch64__
-    if (nn > 0)
+    for (; i + 3 < size; i += 4)
     {
-        asm volatile(
-            "0:                             \n"
-            "subs       %w0, %w0, #1        \n"
-            "st1        {%4.4s}, [%1], #16  \n"
-            "bne        0b                  \n"
-            : "=r"(nn), // %0
-            "=r"(ptr) // %1
-            : "0"(nn),
-            "1"(ptr),
-            "w"(_c) // %4
-            : "cc", "memory");
+        vst1q_f32(ptr, _c);
+        ptr += 4;
     }
-#else
-    if (nn > 0)
-    {
-        asm volatile(
-            "0:                             \n"
-            "subs       %0, #1              \n"
-            "vst1.f32   {%e4-%f4}, [%1 :128]!\n"
-            "bne        0b                  \n"
-            : "=r"(nn), // %0
-            "=r"(ptr) // %1
-            : "0"(nn),
-            "1"(ptr),
-            "w"(_c) // %4
-            : "cc", "memory");
-    }
-#endif // __aarch64__
 #endif // __ARM_NEON
-    for (; remain > 0; remain--)
+    for (; i < size; i++)
     {
         *ptr++ = _v;
     }
@@ -965,48 +919,16 @@ NCNN_FORCEINLINE void Mat::fill(int _v)
     int size = (int)total();
     int* ptr = (int*)data;
 
-#if __ARM_NEON
-    int nn = size >> 2;
-    int remain = size - (nn << 2);
-#else
-    int remain = size;
-#endif // __ARM_NEON
-
+    int i = 0;
 #if __ARM_NEON
     int32x4_t _c = vdupq_n_s32(_v);
-#if __aarch64__
-    if (nn > 0)
+    for (; i + 3 < size; i += 4)
     {
-        asm volatile(
-            "0:                             \n"
-            "subs       %w0, %w0, #1        \n"
-            "st1        {%4.4s}, [%1], #16  \n"
-            "bne        0b                  \n"
-            : "=r"(nn), // %0
-            "=r"(ptr) // %1
-            : "0"(nn),
-            "1"(ptr),
-            "w"(_c) // %4
-            : "cc", "memory");
+        vst1q_s32(ptr, _c);
+        ptr += 4;
     }
-#else
-    if (nn > 0)
-    {
-        asm volatile(
-            "0:                             \n"
-            "subs       %0, #1              \n"
-            "vst1.s32   {%e4-%f4}, [%1 :128]!\n"
-            "bne        0b                  \n"
-            : "=r"(nn), // %0
-            "=r"(ptr) // %1
-            : "0"(nn),
-            "1"(ptr),
-            "w"(_c) // %4
-            : "cc", "memory");
-    }
-#endif // __aarch64__
 #endif // __ARM_NEON
-    for (; remain > 0; remain--)
+    for (; i < size; i++)
     {
         *ptr++ = _v;
     }
@@ -1096,8 +1018,11 @@ NCNN_FORCEINLINE void Mat::fill(__m512 _v)
     }
 }
 #endif // __AVX512F__
-NCNN_FORCEINLINE void Mat::fill(__m256 _v)
+NCNN_FORCEINLINE void Mat::fill(__m256 _v, int _i)
 {
+    // old gcc cannot overload __m128 and __m256 type
+    // add a dummy int parameter for different mangled function symbol
+    (void)_i;
     int size = (int)total();
     float* ptr = (float*)data;
     for (int i = 0; i < size; i++)
@@ -1117,7 +1042,6 @@ NCNN_FORCEINLINE void Mat::fill(__m128 _v)
         ptr += 4;
     }
 }
-
 NCNN_FORCEINLINE void Mat::fill(__m128i _v)
 {
     int size = (int)total();

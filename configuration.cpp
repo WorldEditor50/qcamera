@@ -2,6 +2,18 @@
 
 void Configuration::load()
 {
+    /* yolov4 */
+    QString yolov4Param = QString("%1/yolov4-tiny-opt.param").arg(modelPath);
+    if (QFile(yolov4Param).exists() == false) {
+        QFile::copy(":/yolo/ncnn/models/yolov4-tiny-opt.param", yolov4Param);
+        QFile::setPermissions(yolov4Param, QFileDevice::ReadOther);
+    }
+    QString yolov4Model = QString("%1/yolov4-tiny-opt.bin").arg(modelPath);
+    if (QFile(yolov4Model).exists() == false) {
+        QFile::copy(":/yolo/ncnn/models/yolov4-tiny-opt.bin", yolov4Model);
+        QFile::setPermissions(yolov4Model, QFileDevice::ReadOther);
+    }
+
     /* yolov5 */
     QString yolov5Param = QString("%1/yolov5s_6.0.param").arg(modelPath);
     if (QFile(yolov5Param).exists() == false) {
@@ -13,16 +25,17 @@ void Configuration::load()
         QFile::copy(":/yolo/ncnn/models/yolov5s_6.0.bin", yolov5Model);
         QFile::setPermissions(yolov5Model, QFileDevice::ReadOther);
     }
-    /* yolov4 */
-    QString yolov4Param = QString("%1/yolov4-tiny-opt.param").arg(modelPath);
-    if (QFile(yolov4Param).exists() == false) {
-        QFile::copy(":/yolo/ncnn/models/yolov4-tiny-opt.param", yolov4Param);
-        QFile::setPermissions(yolov4Param, QFileDevice::ReadOther);
+
+    /* yolov7 */
+    QString yolov7Param = QString("%1/yolov7-tiny.param").arg(modelPath);
+    if (QFile(yolov7Param).exists() == false) {
+        QFile::copy(":/yolo/ncnn/models/yolov7-tiny.param", yolov7Param);
+        QFile::setPermissions(yolov7Param, QFileDevice::ReadOther);
     }
-    QString yolov4Model = QString("%1/yolov4-tiny-opt.bin").arg(modelPath);
-    if (QFile(yolov4Model).exists() == false) {
-        QFile::copy(":/yolo/ncnn/models/yolov4-tiny-opt.bin", yolov4Model);
-        QFile::setPermissions(yolov4Model, QFileDevice::ReadOther);
+    QString yolov7Model = QString("%1/yolov7-tiny.bin").arg(modelPath);
+    if (QFile(yolov7Model).exists() == false) {
+        QFile::copy(":/yolo/ncnn/models/yolov7-tiny.bin", yolov7Model);
+        QFile::setPermissions(yolov7Model, QFileDevice::ReadOther);
     }
     /* haarcascade */
     QString haarcascadeEye = QString("%1/haarcascade_eye_tree_eyeglasses.xml").arg(modelPath);
