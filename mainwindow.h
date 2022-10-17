@@ -30,7 +30,8 @@ public:
     enum PageID {
         PAGE_OPENGL_VIDEO = 0,
         PAGE_SETTINGS,
-        PAGE_VIDEO
+        PAGE_VIDEO,
+        PAGE_IMAGE
     };
 public:
     MainWindow(QWidget *parent = nullptr);

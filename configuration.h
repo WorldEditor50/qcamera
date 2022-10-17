@@ -13,6 +13,8 @@ private:
     QString modelPath;
     QString picturePath;
     QString videoPath;
+    QString videoFormat;
+    QString captureStyle;
 public:
     static Configuration& instance()
     {
@@ -20,11 +22,17 @@ public:
         return config;
     }
     void load();
+    /* get */
     QString getStoragePath() const {return storagePath;}
     QString getAppDataPath() const {return appDataPath;}
     QString getModelPath() const {return modelPath;}
     QString getPicturePath() const {return picturePath;}
     QString getVideoPath() const {return videoPath;}
+    QString getVideoFormat() const {return videoFormat;}
+    QString getCaptureStyle() const {return captureStyle;}
+    /* set */
+    void setVideoFormat(const QString format);
+    void setCaptureStyle(const QString style);
 private:
     Configuration();
 };

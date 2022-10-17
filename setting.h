@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QFileDialog>
 #include "camera.h"
+#include "configuration.h"
 
 namespace Ui {
 class Setting;
@@ -17,6 +18,8 @@ public:
     explicit Setting(QWidget *parent = nullptr);
     ~Setting();
     void setDevice(Camera *camera);
+signals:
+    void back();
 public:
     void updateDevice(int index);
 private:

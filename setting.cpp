@@ -7,14 +7,20 @@ Setting::Setting(QWidget *parent) :
     camera(nullptr)
 {
     ui->setupUi(this);
-    connect(ui->selectBtn, &QPushButton::clicked, this, [=](){
-        QString path = QFileDialog::getOpenFileName(nullptr, "select path", "/sdcard/");
-        ui->savePathEdit->setText(path);
-    });
-    /* path */
-    ui->savePathEdit->setPlaceholderText("/sdcard");
     /* rtmp */
     ui->rtmpEdit->setPlaceholderText("rtmp://47.106.179.135");
+    /* video format */
+    ui->videoFormatComboBox->addItems(QStringList{"mp4", "avi", "flv"});
+    connect(ui->videoFormatComboBox, &QComboBox::currentTextChanged, this, [=](const QString &text){
+        Configuration::instance().setVideoFormat(text);
+    });
+    /* capture style */
+    ui->styleComboBox->addItems(QStringList{"none"});
+    connect(ui->styleComboBox, &QComboBox::currentTextChanged, this, [=](const QString &text){
+        Configuration::instance().setCaptureStyle(text);
+    });
+    /* back */
+    connect(ui->backBtn, &QPushButton::clicked, this, &Setting::back);
 }
 
 Setting::~Setting()
@@ -38,8 +44,6 @@ void Setting::setDevice(Camera *camera_)
     for (QSize &x : camera->resolutions) {
         ui->resComboBox->addItem(QString("%1x%2").arg(x.width()).arg(x.height()));
     }
-    /* path */
-    ui->savePathEdit->setText("/sdcard");
     /* rtmp */
     ui->rtmpEdit->setText("rtmp://47.106.179.135");
     return;

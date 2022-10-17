@@ -84,6 +84,7 @@
         </item>
        </layout>
       </widget>
+      <widget class="ImageViewer" name="imageViewer"/>
      </widget>
     </item>
    </layout>
@@ -116,7 +117,13 @@
   <customwidget>
    <class>OpenGLWidget</class>
    <extends>QOpenGLWidget</extends>
-   <header location="global">openglwidget.h</header>
+   <header>openglwidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ImageViewer</class>
+   <extends>QWidget</extends>
+   <header location="global">imageviewer.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

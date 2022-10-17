@@ -29,6 +29,13 @@ MainWindow::MainWindow(QWidget *parent)
 #endif
     /* menu */
     createMenu();
+    /* back */
+    connect(ui->imageViewer, &ImageViewer::back, this, [=](){
+        setPage(PAGE_VIDEO);
+    });
+    connect(ui->settingWidget, &Setting::back, this, [=](){
+        setPage(PAGE_VIDEO);
+    });
     /* load model */
     QtConcurrent::run([=](){
         bool ret = true;
@@ -101,6 +108,9 @@ void MainWindow::updateImage(const QImage &img)
         pixmap.save(path);
         statusBar()->showMessage(path);
         readyCapture.store(0);
+        /* display image */
+        setPage(PAGE_IMAGE);
+        ui->imageViewer->display(pixmap);
     }
     ui->videoLabel->setPixmap(pixmap.scaled(ui->videoLabel->size()));
     return;
@@ -143,6 +153,10 @@ void MainWindow::setPage(int index)
         ui->stackedWidget->setCurrentIndex(PAGE_SETTINGS);
         ui->settingWidget->show();
         break;
+    case PAGE_IMAGE:
+        ui->stackedWidget->setCurrentIndex(PAGE_IMAGE);
+        ui->imageViewer->show();
+        break;
     default:
         break;
     }
@@ -154,10 +168,11 @@ void MainWindow::startRecord()
 {
     QString videoPath = Configuration::instance().getVideoPath();
     QString dateTime = QDateTime::currentDateTime().toString("yyyyMMddhhmmss");
+    QString format = Configuration::instance().getVideoFormat();
 #ifdef Q_OS_ANDROID
-    QString fileName = QString("%1/%2%3").arg(videoPath).arg(dateTime).arg(".mp4");
+    QString fileName = QString("%1/%2.%3").arg(videoPath).arg(dateTime).arg(format);
 #else
-    QString fileName = QString("./%1%2").arg(dateTime).arg(".mp4");
+    QString fileName = QString("./%1.%2").arg(dateTime).arg(format);
 #endif
     Recorder::instance().start(IMG_WIDTH, IMG_HEIGHT, AV_PIX_FMT_RGB24, fileName.toStdString());
     statusBar()->showMessage("Recording");
@@ -220,12 +235,8 @@ void MainWindow::createMenu()
     ui->menu->addAction(quitAction);
     /* settings */
     QAction *settingAction = new QAction(tr("Settings"), this);
-    connect(settingAction, &QAction::triggered, this, [=](){setPage(1);});
+    connect(settingAction, &QAction::triggered, this, [=](){setPage(PAGE_SETTINGS);});
     ui->menu->addAction(settingAction);
-    /* camera */
-    QAction *cameraAction = new QAction(tr("Camera"), this);
-    connect(cameraAction, &QAction::triggered, this, [=](){setPage(2);});
-    ui->menu->addAction(cameraAction);
     /* method */
     QAction *canny = new QAction(tr("canny"), this);
     connect(canny, &QAction::triggered, this, [=](){setProcessFunc("canny");});

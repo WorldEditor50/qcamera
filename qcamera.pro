@@ -20,6 +20,7 @@ SOURCES += \
     cascade.cpp \
     configuration.cpp \
     imageprocess.cpp \
+    imageviewer.cpp \
     main.cpp \
     mainwindow.cpp \
     pipeline.cpp \
@@ -34,6 +35,7 @@ HEADERS += \
     cascade.h \
     configuration.h \
     imageprocess.h \
+    imageviewer.h \
     mainwindow.h \
     openglwidget.h \
     pipeline.h \
@@ -45,6 +47,7 @@ HEADERS += \
     yolov7.h
 
 FORMS += \
+    imageviewer.ui \
     mainwindow.ui \
     setting.ui
 include($$PWD/shared/shared.pri)

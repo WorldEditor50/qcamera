@@ -53,6 +53,22 @@ void Configuration::load()
         QFile::copy(":/haarcascade/data/haarcascade_upperbody.xml", haarcascadeUpperbody);
         QFile::setPermissions(haarcascadeUpperbody, QFileDevice::ReadOther);
     }
+    /* video format */
+    videoFormat = "mp4";
+    /* capture style */
+    captureStyle = "none";
+    return;
+}
+
+void Configuration::setVideoFormat(const QString format)
+{
+    videoFormat = format;
+    return;
+}
+
+void Configuration::setCaptureStyle(const QString style)
+{
+    captureStyle = style;
     return;
 }
 

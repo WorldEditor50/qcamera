@@ -63,7 +63,7 @@ int Recorder::start(int width, int height, AVPixelFormat pixelFormat_, const std
         codecContext->me_subpel_quality = 6;
         codecContext->qmin = 10;
         codecContext->qmax = 51;
-        codecContext->qcompress = 0.6;
+        codecContext->qcompress = 1;
         codecContext->keyint_min = 25;
         codecContext->trellis = 0;
         codecContext->level = 13;
