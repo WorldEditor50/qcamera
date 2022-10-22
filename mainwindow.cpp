@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent)
     , readyCapture(0)
 {
     ui->setupUi(this);
+    /* ffmepg network */
+    RtmpPublisher::instance().enableNetwork();
     /* opengl */
 #if USE_OPENGL
     QSurfaceFormat format;
@@ -174,7 +176,8 @@ void MainWindow::startRecord()
 #else
     QString fileName = QString("./%1.%2").arg(dateTime).arg(format);
 #endif
-    Recorder::instance().start(IMG_WIDTH, IMG_HEIGHT, AV_PIX_FMT_RGB24, fileName.toStdString());
+    Recorder::instance().start(IMG_WIDTH, IMG_HEIGHT, AV_PIX_FMT_RGB24,
+                               format.toStdString(), fileName.toStdString());
     statusBar()->showMessage("Recording");
     return;
 }
@@ -183,6 +186,20 @@ void MainWindow::stopRecord()
 {
     Recorder::instance().stop();
     statusBar()->showMessage("Record completed.");
+    return;
+}
+
+void MainWindow::startRtmp()
+{
+    RtmpPublisher::instance().start(IMG_WIDTH, IMG_HEIGHT, "rtmp://localhost/live/livestream");
+    statusBar()->showMessage("RTMP STREAMING");
+    return;
+}
+
+void MainWindow::stopRtmp()
+{
+    RtmpPublisher::instance().stop();
+    statusBar()->showMessage("RTMP STREAMING END");
     return;
 }
 
@@ -273,6 +290,13 @@ void MainWindow::createMenu()
     QAction *stopRecordAction = new QAction(tr("stop record"), this);
     connect(stopRecordAction, &QAction::triggered, this, &MainWindow::stopRecord);
     ui->menu->addAction(stopRecordAction);
+    /* rtmp */
+    QAction *startRtmpAction = new QAction(tr("start streaming"), this);
+    connect(startRtmpAction, &QAction::triggered, this, &MainWindow::startRtmp);
+    ui->menu->addAction(startRtmpAction);
+    QAction *stopRtmpAction = new QAction(tr("stop streaming"), this);
+    connect(stopRtmpAction, &QAction::triggered, this, &MainWindow::stopRtmp);
+    ui->menu->addAction(stopRtmpAction);
     return;
 }
 

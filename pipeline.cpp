@@ -122,6 +122,9 @@ void Pipeline::impl()
 #endif
         /* record */
         Recorder::instance().rawEncode(img.data);
+
+        /* rtmp */
+        RtmpPublisher::instance().encode(img.data);
         imgCache.put(rgba);
     }
     return;

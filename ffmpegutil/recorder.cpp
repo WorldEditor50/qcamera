@@ -17,13 +17,14 @@ Recorder::Recorder():
 
 Recorder::~Recorder()
 {
-    clear();
+    stop();
 }
 
-int Recorder::start(int width, int height, AVPixelFormat pixelFormat_, const std::string &videoName)
+int Recorder::start(int width, int height, AVPixelFormat pixelFormat_,
+                    const std::string &videoFormat, const std::string &videoName)
 {
     std::lock_guard<std::mutex> guard(mutex);
-    if (state == STATE_READY) {
+    if (state == STATE_RECORDING) {
         return 0;
     }
     /* clear */
@@ -44,7 +45,7 @@ int Recorder::start(int width, int height, AVPixelFormat pixelFormat_, const std
     }
     codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
     codecContext->bit_rate = 400000; //sharpness
-    codecContext->gop_size = 256;
+    codecContext->gop_size = 10;
     codecContext->framerate.num = 25;// play speed
     codecContext->framerate.den = 1;
     codecContext->time_base = av_inv_q(codecContext->framerate);
@@ -63,7 +64,7 @@ int Recorder::start(int width, int height, AVPixelFormat pixelFormat_, const std
         codecContext->me_subpel_quality = 6;
         codecContext->qmin = 10;
         codecContext->qmax = 51;
-        codecContext->qcompress = 1;
+        codecContext->qcompress = 0.6;
         codecContext->keyint_min = 25;
         codecContext->trellis = 0;
         codecContext->level = 13;
@@ -84,8 +85,8 @@ int Recorder::start(int width, int height, AVPixelFormat pixelFormat_, const std
         state = STATE_NONE;
         return -1;
     }
-    /* ooutput */
-    int ret = avformat_alloc_output_context2(&formatContext, nullptr, nullptr, videoName.c_str());
+    /* output */
+    int ret = avformat_alloc_output_context2(&formatContext, nullptr, videoFormat.c_str(), videoName.c_str());
     if (ret != 0) {
         std::cout<<"can not alloc outputContext "<<std::endl;
         state = STATE_NONE;
@@ -143,7 +144,7 @@ int Recorder::start(int width, int height, AVPixelFormat pixelFormat_, const std
         state = STATE_NONE;
         return -1;
     }
-    state = STATE_READY;
+    state = STATE_RECORDING;
     return 0;
 }
 
@@ -151,7 +152,7 @@ int Recorder::rawEncode(unsigned char *data)
 {
     {
         std::lock_guard<std::mutex> guard(mutex);
-        if (state != STATE_READY) {
+        if (state != STATE_RECORDING) {
             return 0;
         }
         int ret = av_frame_make_writable(yuv420pFrame);
@@ -172,7 +173,7 @@ int Recorder::rawEncode(unsigned char *data)
 int Recorder::encode(AVFrame *frame)
 {
     std::lock_guard<std::mutex> guard(mutex);
-    if (state != STATE_READY) {
+    if (state != STATE_RECORDING) {
         return 0;
     }
     sws_scale(swsContext,
@@ -226,7 +227,9 @@ void Recorder::stop()
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
     /* flush */
-    av_write_trailer(formatContext);
+    if (formatContext != nullptr) {
+        av_write_trailer(formatContext);
+    }
     /* clear */
     clear();
     return;

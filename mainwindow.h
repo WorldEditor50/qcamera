@@ -16,6 +16,7 @@
 #include "imageprocess.h"
 #include "setting.h"
 #include "recorder.h"
+#include "rtmppublisher.h"
 #include "pipeline.h"
 #include "configuration.h"
 
@@ -45,6 +46,8 @@ public slots:
     void setPage(int index);
     void startRecord();
     void stopRecord();
+    void startRtmp();
+    void stopRtmp();
     void setProcessFunc(const QString &funcName);
 protected:
     bool event(QEvent *ev) override;

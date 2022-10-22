@@ -19,7 +19,6 @@ class Recorder
 public:
     enum State {
         STATE_NONE = 0,
-        STATE_READY,
         STATE_RECORDING,
         STATE_FINISHED
     };
@@ -44,7 +43,7 @@ public:
         return recorder;
     }
     ~Recorder();
-    int start(int width, int height, AVPixelFormat pixelFormat_, const std::string &videoName);
+    int start(int width, int height, AVPixelFormat pixelFormat_, const std::string &videoFormat, const std::string &videoName);
     int rawEncode(unsigned char* data);
     int encode(AVFrame* frame);
     void stop();
