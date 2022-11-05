@@ -45,7 +45,7 @@ int Recorder::start(int width, int height, AVPixelFormat pixelFormat_,
     }
     codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
     codecContext->bit_rate = 400000; //sharpness
-    codecContext->gop_size = 10;
+    codecContext->gop_size = 4; //Group of Picture
     codecContext->framerate.num = 25;// play speed
     codecContext->framerate.den = 1;
     codecContext->time_base = av_inv_q(codecContext->framerate);

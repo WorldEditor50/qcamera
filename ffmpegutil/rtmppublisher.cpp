@@ -20,32 +20,32 @@ void RtmpPublisher::enableNetwork()
     }
 }
 
-int RtmpPublisher::start(int width, int height, const char* url)
+void RtmpPublisher::start(int width, int height, const std::string &url)
 {
     std::lock_guard<std::mutex> guard(mutex);
     if (state == STATE_STREAMING) {
-        return 0;
+        return;
     }
-    if (url == nullptr) {
+    if (url.empty()) {
         std::cout<<"invalid parameters."<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
 
     /* output context */
-    int ret = avformat_alloc_output_context2(&outputContext, nullptr, "flv", url);
+    int ret = avformat_alloc_output_context2(&outputContext, nullptr, "flv", url.c_str());
     if (ret != 0) {
         std::cout<<"can not alloc outputContext "<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
 
     /* open url */
-    ret = avio_open(&outputContext->pb, url, AVIO_FLAG_READ_WRITE);
+    ret = avio_open(&outputContext->pb, url.c_str(), AVIO_FLAG_WRITE);
     if (ret != 0) {
         std::cout<<"can not open outputContext, avio_open failed. "<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
 
     /* encoder */
@@ -53,18 +53,18 @@ int RtmpPublisher::start(int width, int height, const char* url)
     if (encoder == nullptr) {
         std::cout<<"Find encoder AV_CODEC_ID_H264 failed!"<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
     codecContext = avcodec_alloc_context3(encoder);
     if (codecContext == nullptr) {
         std::cout<<"Alloc context for encoder contx failed"<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
     fps = 30;
     codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
     codecContext->bit_rate = 400000; //sharpness
-    codecContext->gop_size = 50;
+    codecContext->gop_size = 50; // step
     codecContext->framerate.num = fps;// play speed
     codecContext->framerate.den = 1;
     codecContext->time_base = av_inv_q(codecContext->framerate);
@@ -84,7 +84,7 @@ int RtmpPublisher::start(int width, int height, const char* url)
     if (avcodec_open2(codecContext, encoder, &param) < 0) {
         std::cout<<"Open encoder failed!"<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
 
     /* out stream */
@@ -96,14 +96,14 @@ int RtmpPublisher::start(int width, int height, const char* url)
     if (ret < 0) {
         std::cout<<"Failed to copy Publisher parameters to output stream"<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
 
     /* write header */
     AVDictionary *options = nullptr;
     av_dict_set(&options, "flvflags", "no_duration_filesize", 0);
-    //av_dict_set(&options, "rtmp_transport", "tcp", 0);
-    //av_dict_set(&options, "stimeout", "8000000", 0);
+    av_dict_set(&options, "rtmp_transport", "tcp", 0);
+    av_dict_set(&options, "stimeout", "8000000", 0);
     ret = avformat_write_header(outputContext, &options);
     if (ret != 0) {
         std::cout<<"Publisher: can not write header. code="<<ret<<std::endl;
@@ -111,10 +111,10 @@ int RtmpPublisher::start(int width, int height, const char* url)
         char buf[1024]={0};
         av_strerror(ret, buf, 1024);
         std::cout<<std::string(buf);
-        return -1;
+        return;
     }
     av_dict_free(&options);
-    av_dump_format(outputContext, 0, url, 1);
+    av_dump_format(outputContext, 0, url.c_str(), 1);
     /* transcode */
     swsContext = sws_getContext(width,
                                 height,
@@ -126,7 +126,7 @@ int RtmpPublisher::start(int width, int height, const char* url)
     if (swsContext == nullptr) {
         std::cout<<"Could not initialize the conversion context"<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
     /* rgb frame */
     frame = av_frame_alloc();
@@ -143,21 +143,21 @@ int RtmpPublisher::start(int width, int height, const char* url)
         yuv420pFrame = NULL;
         std::cout<<"Frame get buffer failed"<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
     /* packet */
     packet = av_packet_alloc();
     if (packet == nullptr) {
         std::cout<<"failed to allocate packet."<<std::endl;
         state = STATE_NONE;
-        return -1;
+        return;
     }
     state = STATE_STREAMING;
     /* start time */
     startTime = av_gettime();
     timeBase = codecContext->time_base;
     timeBaseFloat = timeBase.num * 1.0 / timeBase.den;
-    return 0;
+    return;
 }
 
 void RtmpPublisher::encode(unsigned char *data)
@@ -203,29 +203,52 @@ void RtmpPublisher::encode(unsigned char *data)
             break;
         }
         packet->stream_index = outStream->index;
+        /* pts, dts */
+        AVRational itime;// = ictx->streams[packet->stream_index]->time_base;
+        itime.num = 1;
+        itime.den = fps;
+        AVRational otime = outputContext->streams[packet->stream_index]->time_base;
+        packet->pts = av_rescale_q_rnd(packet->pts, itime, otime, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_NEAR_INF));
+        packet->dts = av_rescale_q_rnd(packet->pts, itime, otime, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_NEAR_INF));
+        /* duration */
+        packet->duration = av_rescale_q_rnd(packet->duration, itime, otime, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_NEAR_INF));
+        packet->pos = -1;
+        /* delay */
+        long long now = av_gettime() - startTime;
+        long long dts = 0;
+        dts = packet->dts * (1000 * 1000 * r2d(itime));
+        if (dts > now) {
+            av_usleep(dts - now);
+        }
+#if 0
+        packet->stream_index = outStream->index;
         //AVRational time_base = outputContext->streams[0]->time_base;
         packet->pts = frameCount*(outStream->time_base.den)/((outStream->time_base.num)*fps);
         packet->dts = packet->pts;
         packet->duration = (outStream->time_base.den) /((outStream->time_base.num)*fps);
         packet->pos = -1;
-
-#if 0
-        if(AV_NOPTS_VALUE == packet->pts) {
+        if (AV_NOPTS_VALUE == packet->pts) {
             av_usleep(32000);
         } else {
             int64_t nowTime = av_gettime() - startTime;
-            int64_t pts = packet->pts * 1000 * 1000 * timeBaseFloat;
+            int64_t pts = packet->pts*1000*1000*timeBaseFloat;
             if(pts > nowTime) {
                 av_usleep(pts - nowTime);
             }
         }
-
         /* rescale output packet timestamp values from codec to stream timebase */
-        av_packet_rescale_ts(packet, codecContext->time_base, outStream->time_base);
-        packet->stream_index = outStream->index;
+        //av_packet_rescale_ts(packet, codecContext->time_base, outStream->time_base);
+        //packet->stream_index = outStream->index;
 #endif
         /* write frame */
-        av_interleaved_write_frame(outputContext, packet);
+        ret = av_interleaved_write_frame(outputContext, packet);
+        if (ret < 0) {
+            std::cout<<"av_interleaved_write_frame error, code:"<<ret<<std::endl;
+            char buf[1024]={0};
+            av_strerror(ret, buf, 1024);
+            std::cout<<std::string(buf)<<std::endl;
+            break;
+        }
         av_packet_unref(packet);
     }
     return;

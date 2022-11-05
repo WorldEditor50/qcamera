@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent)
     , readyCapture(0)
 {
     ui->setupUi(this);
+    /* android permission */
+    requestPermission();
     /* ffmepg network */
     RtmpPublisher::instance().enableNetwork();
     /* opengl */
@@ -85,6 +87,25 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::requestPermission()
+{
+#ifdef Q_OS_ANDROID
+    QStringList permissions = {
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.INTERNET"
+    };
+    for (QString &permission : permissions) {
+        QtAndroid::PermissionResult result = QtAndroid::checkPermission(permission);
+        if (result == QtAndroid::PermissionResult::Denied) {
+            QtAndroid::requestPermissionsSync(QStringList{permission});
+        }
+    }
+#endif
+    return;
 }
 
 void MainWindow::capture()
@@ -191,7 +212,12 @@ void MainWindow::stopRecord()
 
 void MainWindow::startRtmp()
 {
-    RtmpPublisher::instance().start(IMG_WIDTH, IMG_HEIGHT, "rtmp://localhost/live/livestream");
+    QString url = ui->settingWidget->getStreamURL();
+    if (url.isEmpty()) {
+        QMessageBox::warning(this, "Notice", "empty rtmp url", QMessageBox::Ok);
+        return;
+    }
+    RtmpPublisher::instance().start(IMG_WIDTH, IMG_HEIGHT, url.toStdString());
     statusBar()->showMessage("RTMP STREAMING");
     return;
 }
@@ -238,7 +264,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 #endif
     return QMainWindow::closeEvent(event);
-
 }
 
 void MainWindow::createMenu()

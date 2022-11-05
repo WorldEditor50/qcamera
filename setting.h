@@ -18,6 +18,7 @@ public:
     explicit Setting(QWidget *parent = nullptr);
     ~Setting();
     void setDevice(Camera *camera);
+    QString getStreamURL();
 signals:
     void back();
 public:

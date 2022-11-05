@@ -1,5 +1,5 @@
-QT       += core gui multimedia multimediawidgets network concurrent sql opengl
-
+QT       += core gui multimedia multimediawidgets network
+QT       += concurrent sql opengl androidextras
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11

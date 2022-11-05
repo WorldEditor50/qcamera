@@ -53,11 +53,15 @@ public:
     ~RtmpPublisher();
     static inline RtmpPublisher& instance()
     {
-        static RtmpPublisher rtmp;\
+        static RtmpPublisher rtmp;
         return rtmp;
     }
+    static inline double r2d(AVRational r)
+    {
+        return r.num == 0 || r.den == 0 ? 0. : (double)r.num / (double)r.den;
+    }
     void enableNetwork();
-    int start(int width, int height, const char* url);
+    void start(int width, int height, const std::string &url);
     void encode(unsigned char *data);
     void stop();
     void clear();

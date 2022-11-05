@@ -20,6 +20,10 @@
 #include "pipeline.h"
 #include "configuration.h"
 
+#ifdef Q_OS_ANDROID
+#include <QtAndroid>
+#endif
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -40,6 +44,7 @@ public:
 signals:
     void send(const QImage &img);
 public slots:
+    void requestPermission();
     void capture();
     void updateImage(const QImage &img);
     void updateGL(int w, int h, unsigned char* data);
