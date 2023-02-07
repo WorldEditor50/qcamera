@@ -1,5 +1,8 @@
 QT       += core gui multimedia multimediawidgets network
-QT       += concurrent sql opengl androidextras
+QT       += concurrent sql opengl
+contains(ANDROID_TARGET_ARCH, arm64-v8a) {
+    QT       += androidextras
+}
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -57,7 +60,8 @@ contains(ANDROID_TARGET_ARCH, arm64-v8a) {
     INCLUDEPATH += $$PWD/libyuv/include
     LIBS += -L$$PWD/libyuv/lib/arm64-v8a -lyuv
     # opencv
-    OPENCV_PATH = /home/eigen/Downloads/opencv-4.5.5-android-sdk/OpenCV-android-sdk/sdk/native
+    #OPENCV_PATH = /home/eigen/Downloads/opencv-4.5.5-android-sdk/OpenCV-android-sdk/sdk/native
+    OPENCV_PATH = D:/home/3rdparty/opencv-4.7.0-android-sdk/OpenCV-android-sdk/sdk/native
     INCLUDEPATH += $$OPENCV_PATH/jni/include
     LIBS += -L$$OPENCV_PATH/libs/arm64-v8a -lopencv_java4
     # ncnn
@@ -65,11 +69,13 @@ contains(ANDROID_TARGET_ARCH, arm64-v8a) {
     INCLUDEPATH += $$NCNN_PATH/include/ncnn
     LIBS += -L$$NCNN_PATH/lib -lncnn
     # ffmpeg
-    FFMPEG_PATH = /home/eigen/MySpace/MyGithub/qcamera/ffmpeg/arm64-v8a
+    FFMPEG_PATH = $$PWD/ffmpeg/arm64-v8a
     INCLUDEPATH += $$FFMPEG_PATH/include
     LIBS += -L$$FFMPEG_PATH -lffmpeg-debug
 
 } else {
+
+unix {
     #libyuv
     LIBYUV_PATH = /home/eigen/MySpace/3rdPartyLibrary/libyuv
     INCLUDEPATH += $$LIBYUV_PATH/include
@@ -108,21 +114,72 @@ contains(ANDROID_TARGET_ARCH, arm64-v8a) {
                                 -lavutil \
                                 -lpostproc
 }
+
+
+win32 {
+    QMAKE_CXXFLAGS += /utf-8
+
+    LIBPATH = D:/home/3rdparty
+    #libyuv
+    LIBYUV_PATH = $$LIBPATH/libyuv
+    INCLUDEPATH += $$LIBYUV_PATH/include
+    LIBS += -L$$LIBYUV_PATH/lib -lyuv
+    #jpeg
+    LIBJPEG_PATH =  $$LIBPATH/libjpeg
+    LIBS += -L$$LIBJPEG_PATH/lib -llibjpeg
+    #opencv
+    OPENCV_PATH = $$LIBPATH/opencv455
+    INCLUDEPATH += $$OPENCV_PATH/include
+    LIBS += -L$$OPENCV_PATH/x64/vc16/lib -lopencv_calib3d455 \
+                                -lopencv_core455 \
+                                -lopencv_dnn455 \
+                                -lopencv_features2d455 \
+                                -lopencv_flann455 \
+                                -lopencv_gapi455 \
+                                -lopencv_highgui455 \
+                                -lopencv_imgcodecs455 \
+                                -lopencv_imgproc455 \
+                                -lopencv_ml455 \
+                                -lopencv_objdetect455 \
+                                -lopencv_photo455 \
+                                -lopencv_stitching455 \
+                                -lopencv_video455 \
+                                -lopencv_videoio455
+    # ncnn
+    NCNN_PATH = $$LIBPATH/ncnn
+    INCLUDEPATH += $$NCNN_PATH/include/ncnn
+    LIBS += -L$$NCNN_PATH/lib -lncnn
+    # ffmpeg
+    FFMPEG_PATH = $$LIBPATH/ffmpeg-5.1.2-full_build-shared
+    INCLUDEPATH += $$FFMPEG_PATH/include
+    LIBS += -L$$FFMPEG_PATH/lib -lavdevice \
+                                -lavfilter \
+                                -lavformat \
+                                -lavcodec \
+                                -lswscale \
+                                -lswresample \
+                                -lavutil \
+                                -lpostproc
+    # opengl
+    LIBS += -lopengl32
+}
+
+}
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-DISTFILES += \
-    android/AndroidManifest.xml \
-    android/build.gradle \
-    android/gradle/wrapper/gradle-wrapper.jar \
-    android/gradle/wrapper/gradle-wrapper.properties \
-    android/gradlew \
-    android/gradlew.bat \
-    android/res/values/libs.xml
 
 contains(ANDROID_TARGET_ARCH,arm64-v8a) {
+    DISTFILES += \
+        android/AndroidManifest.xml \
+        android/build.gradle \
+        android/gradle/wrapper/gradle-wrapper.jar \
+        android/gradle/wrapper/gradle-wrapper.properties \
+        android/gradlew \
+        android/gradlew.bat \
+        android/res/values/libs.xml
     ANDROID_PACKAGE_SOURCE_DIR = \
         $$PWD/android
 }

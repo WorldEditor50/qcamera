@@ -20,7 +20,7 @@ bool VideoInput::open(const std::string &url, const std::string &res, bool strea
         return false;
     }
 #ifdef WIN32
-    AVInputFormat *inputFormat = av_find_input_format(VIDEO_DEVICE);
+    const AVInputFormat *inputFormat = av_find_input_format(VIDEO_DEVICE);
 #else
     const AVInputFormat *inputFormat = av_find_input_format(VIDEO_DEVICE);
 #endif

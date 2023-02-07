@@ -83,6 +83,9 @@ void Pipeline::impl()
             }
             frame = std::move(frameQueue.front());
             frameQueue.pop();
+            if (frameQueue.size() > 32) {
+                continue;
+            }
         }
         /* process */
         auto it = mapper.find(funcName);

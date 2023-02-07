@@ -26,7 +26,7 @@ bool Decoder::open(AVFormatContext *inputContext_)
     }
     inputContext = inputContext_;
 #ifdef WIN64
-    AVCodec *codec = nullptr;
+    const AVCodec *codec = nullptr;
 #else
     const AVCodec *codec = nullptr;
 #endif

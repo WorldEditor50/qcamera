@@ -25,7 +25,7 @@ protected:
 public:
     Yolo():hasLoadModel(false){}
     bool load(const std::string &model);
-    virtual int detect(const cv::Mat &image, std::vector<Object> &objects){}
+    virtual int detect(const cv::Mat &image, std::vector<Object> &objects){return 0;}
     void draw(cv::Mat &image, const std::vector<Object> &objects);
 };
 

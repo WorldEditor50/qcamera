@@ -91,7 +91,7 @@ public:
         STATE_TERMINATE
     };
     using Func = std::function<cv::Mat(int, int, unsigned char*)>;
-    constexpr static int max_thread_num = 4;
+    constexpr static int max_thread_num = 2;
     constexpr static int w = IMG_WIDTH;
     constexpr static int h = IMG_HEIGHT;
 private:
