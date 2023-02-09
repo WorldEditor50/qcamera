@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/video/tracking.hpp>
 
 #include <QImage>
 #include <map>
@@ -16,18 +17,57 @@
 #include "yolov7.h"
 #include "cascade.h"
 
+class OpticalFlow
+{
+private:
+    cv::Mat preImage;
+    cv::Ptr<cv::DenseOpticalFlow> denseOpticalFlow;
+public:
+    OpticalFlow():denseOpticalFlow(nullptr)
+    {
+        denseOpticalFlow = cv::DISOpticalFlow::create(cv::DISOpticalFlow::PRESET_FAST);
+    }
+
+    void operator()(cv::Mat &img)
+    {
+        if (preImage.empty()) {
+            preImage = img.clone();
+            return;
+        }
+        cv::Mat grayImg1;
+        cv::cvtColor(img, grayImg1, cv::COLOR_RGB2GRAY);
+        cv::Mat grayImg2;
+        cv::cvtColor(preImage, grayImg2, cv::COLOR_RGB2GRAY);
+        preImage = img.clone();
+        std::vector<cv::Point2f> points;
+        double qualityLevel = 0.01;
+        double minDistance = 16;
+        /* features */
+        cv::goodFeaturesToTrack(grayImg1, points, 256, qualityLevel, minDistance);
+        cv::Mat flow;
+        denseOpticalFlow->calc(grayImg1, grayImg2, flow);
+
+        for (int i = 0; i < img.rows; i+=16) {
+            for (int j = 0; j < img.cols; j+=16) {
+                cv::Point2f fxy = flow.at<cv::Point2f>(i, j);
+                cv::line(img,
+                        cv::Point(j, i),
+                        cv::Point(cvRound(j+fxy.x),
+                                  cvRound(i+fxy.y)),
+                        CV_RGB(0, 255, 0), 1, 8);
+            }
+        }
+        return;
+    }
+    static OpticalFlow& instance()
+    {
+        static OpticalFlow opticalFlow;
+        return opticalFlow;
+    }
+};
+
 class Improcess
 {
-public:
-    enum FuncType {
-        FUNC_COLOR = 0,
-        FUNC_CANNY,
-        FUNC_SOBEL,
-        FUNC_LAPLACE,
-        FUNC_HAARCASCADE,
-        FUNC_YOLOV4,
-        FUNC_YOLOV5
-    };
 public:
     inline static QImage mat2QImage(const cv::Mat &src)
     {
@@ -61,6 +101,7 @@ public:
     static cv::Mat yolov4(int width, int height, unsigned char* data);
     static cv::Mat yolov5(int width, int height, unsigned char* data);
     static cv::Mat yolov7(int width, int height, unsigned char* data);
+    static cv::Mat opticalFlow(int width, int height, unsigned char* data);
     inline static cv::Mat color(int width, int height, unsigned char* data)
     {
         return cv::Mat(height, width, CV_8UC4, data);

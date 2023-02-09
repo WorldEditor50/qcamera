@@ -55,6 +55,7 @@ Pipeline::Pipeline():
     mapper.insert(std::pair<std::string, Func>("canny", &Improcess::canny));
     mapper.insert(std::pair<std::string, Func>("sobel", &Improcess::sobel));
     mapper.insert(std::pair<std::string, Func>("laplace", &Improcess::laplace));
+    mapper.insert(std::pair<std::string, Func>("opticalFlow", &Improcess::opticalFlow));
     mapper.insert(std::pair<std::string, Func>("haarcascade", &Improcess::haarcascade));
     mapper.insert(std::pair<std::string, Func>("yolov4", &Improcess::yolov4));
     mapper.insert(std::pair<std::string, Func>("yolov5", &Improcess::yolov5));

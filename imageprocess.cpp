@@ -81,3 +81,10 @@ cv::Mat Improcess::yolov7(int width, int height, unsigned char *data)
     return src;
 }
 
+cv::Mat Improcess::opticalFlow(int width, int height, unsigned char *data)
+{
+    cv::Mat src(height, width, CV_8UC4, data);
+    OpticalFlow::instance()(src);
+    return src;
+}
+

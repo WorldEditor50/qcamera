@@ -300,6 +300,11 @@ void MainWindow::createMenu()
     QAction *yolov7 = new QAction(tr("yolov7"), this);
     connect(yolov7, &QAction::triggered, this, [=](){setProcessFunc("yolov7");});
     ui->menu->addAction(yolov7);
+
+    QAction *opticalFlow = new QAction(tr("opticalFlow"), this);
+    connect(opticalFlow, &QAction::triggered, this, [=](){setProcessFunc("opticalFlow");});
+    ui->menu->addAction(opticalFlow);
+
     QAction *linear = new QAction(tr("color"), this);
     connect(linear, &QAction::triggered, this, [=](){setProcessFunc("color");});
     ui->menu->addAction(linear);
