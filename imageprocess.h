@@ -98,6 +98,16 @@ public:
 class Improcess
 {
 public:
+    inline static Improcess& instance()
+    {
+        static Improcess process;
+        return process;
+    }
+    inline static cv::Mat color(int width, int height, unsigned char* data)
+    {
+        return cv::Mat(height, width, CV_8UC4, data);
+    }
+
     inline static QImage mat2QImage(const cv::Mat &src)
     {
         QImage img;
@@ -131,15 +141,7 @@ public:
     static cv::Mat yolov5(int width, int height, unsigned char* data);
     static cv::Mat yolov7(int width, int height, unsigned char* data);
     static cv::Mat opticalFlow(int width, int height, unsigned char* data);
-    inline static cv::Mat color(int width, int height, unsigned char* data)
-    {
-        return cv::Mat(height, width, CV_8UC4, data);
-    }
-    inline static Improcess& instance()
-    {
-        static Improcess process;
-        return process;
-    }
+
 private:
     Improcess(){}
 };

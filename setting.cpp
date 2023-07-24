@@ -8,7 +8,7 @@ Setting::Setting(QWidget *parent) :
 {
     ui->setupUi(this);
     /* rtmp */
-    ui->rtmpEdit->setPlaceholderText("rtmp://47.106.179.135/live/livestream");
+    ui->streamUrlEdit->setPlaceholderText("rtsp://127.0.0.1/live/test");
     /* video format */
     ui->videoFormatComboBox->addItems(QStringList{"mp4", "avi", "flv"});
     connect(ui->videoFormatComboBox, &QComboBox::currentTextChanged, this, [=](const QString &text){
@@ -45,13 +45,13 @@ void Setting::setDevice(Camera *camera_)
         ui->resComboBox->addItem(QString("%1x%2").arg(x.width()).arg(x.height()));
     }
     /* rtmp */
-    ui->rtmpEdit->setText("rtmp://47.106.179.135/live/livestream");
+    ui->streamUrlEdit->setText("rtsp://192.168.100.46/live/test");
     return;
 }
 
 QString Setting::getStreamURL()
 {
-    return ui->rtmpEdit->text();
+    return ui->streamUrlEdit->text();
 }
 
 void Setting::updateDevice(int index)

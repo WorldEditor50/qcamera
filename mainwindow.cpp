@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     /* android permission */
     requestPermission();
     /* ffmepg network */
-    RtmpPublisher::instance().enableNetwork();
+    RtspPublisher::instance().enableNetwork();
     /* opengl */
 #if USE_OPENGL
     QSurfaceFormat format;
@@ -40,7 +40,28 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->settingWidget, &Setting::back, this, [=](){
         setPage(PAGE_VIDEO);
     });
+
+    /* camera */
+    connect(this, &MainWindow::send, this, &MainWindow::updateImage, Qt::QueuedConnection);
+    Camera::infoList = QCameraInfo::availableCameras();
+    /* start camera */
+    camera = new Camera(this);
+    ui->settingWidget->setDevice(camera);
+#if USE_OPENGL
+    connect(&Pipeline::instance(), &Pipeline::sendGlImage,
+            this, &MainWindow::updateGL, Qt::QueuedConnection);
+#else
+    connect(&Pipeline::instance(), &Pipeline::sendImage,
+            this, &MainWindow::updateImage, Qt::QueuedConnection);
+#endif
+    Pipeline::instance().setFunc(PROCESS_COLOR);
+    camera->setProcess([=](const QVideoFrame &frame) {
+        Pipeline::instance().dispatch(frame);
+    });
+    /* pipeline */
+    Pipeline::instance().start();
     /* load model */
+    connect(this, &MainWindow::modelReady, this, &MainWindow::launch, Qt::QueuedConnection);
     QtConcurrent::run([=](){
         bool ret = true;
 #ifdef Q_OS_ANDROID
@@ -52,34 +73,14 @@ MainWindow::MainWindow(QWidget *parent)
 #endif
         ret = Yolov7::instance().load(QString("%1/yolov7-tiny").arg(modelPath).toStdString());
         ret = Yolov5::instance().load(QString("%1/yolov5s_6.0").arg(modelPath).toStdString());
-        ret = Yolov4::instance().load(QString("%1/yolov4-tiny-opt").arg(modelPath).toStdString());
         if (ret == false) {
             statusBar()->showMessage("Failed to load model.");
         } else {
             statusBar()->showMessage("load model completed.");
         }
+        emit modelReady();
     });
 
-    /* camera */
-    connect(this, &MainWindow::send, this, &MainWindow::updateImage, Qt::QueuedConnection);
-    Camera::infoList = QCameraInfo::availableCameras();
-    /* start camera */
-    camera = new Camera(this);
-    camera->start(0);
-    ui->settingWidget->setDevice(camera);
-#if USE_OPENGL
-    connect(&Pipeline::instance(), &Pipeline::sendGlImage,
-            this, &MainWindow::updateGL, Qt::QueuedConnection);
-#else
-    connect(&Pipeline::instance(), &Pipeline::sendImage,
-            this, &MainWindow::updateImage, Qt::QueuedConnection);
-#endif
-    Pipeline::instance().setFuncName("color");
-    camera->setProcess([=](const QVideoFrame &frame) {
-        Pipeline::instance().dispatch(frame);
-    });
-    /* pipeline */
-    Pipeline::instance().start();
 }
 
 MainWindow::~MainWindow()
@@ -208,29 +209,28 @@ void MainWindow::stopRecord()
     return;
 }
 
-void MainWindow::startRtmp()
+void MainWindow::startStream()
 {
     QString url = ui->settingWidget->getStreamURL();
     if (url.isEmpty()) {
         QMessageBox::warning(this, "Notice", "empty rtmp url", QMessageBox::Ok);
         return;
     }
-    RtmpPublisher::instance().start(IMG_WIDTH, IMG_HEIGHT, url.toStdString());
-    statusBar()->showMessage("RTMP STREAMING");
+    RtspPublisher::instance().start(IMG_WIDTH, IMG_HEIGHT, url.toStdString());
+    statusBar()->showMessage("START STREAMING");
     return;
 }
 
-void MainWindow::stopRtmp()
+void MainWindow::stopStream()
 {
-    RtmpPublisher::instance().stop();
-    statusBar()->showMessage("RTMP STREAMING END");
+    RtspPublisher::instance().stop();
+    statusBar()->showMessage("STOP STREAMING");
     return;
 }
 
-void MainWindow::setProcessFunc(const QString &funcName)
+void MainWindow::launch()
 {
-    Pipeline::instance().setFuncName(funcName.toStdString());
-    statusBar()->showMessage(funcName);
+    camera->start(0);
     return;
 }
 
@@ -280,33 +280,54 @@ void MainWindow::createMenu()
     ui->menu->addAction(settingAction);
     /* method */
     QAction *canny = new QAction(tr("canny"), this);
-    connect(canny, &QAction::triggered, this, [=](){setProcessFunc("canny");});
+    connect(canny, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_CANNY);
+        statusBar()->showMessage("canny");
+    });
     ui->menu->addAction(canny);
     QAction *sobel = new QAction(tr("sobel"), this);
-    connect(sobel, &QAction::triggered, this, [=](){setProcessFunc("sobel");});
+    connect(sobel, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_SOBEL);
+        statusBar()->showMessage("sobel");
+    });
     ui->menu->addAction(sobel);
     QAction *laplace = new QAction(tr("laplace"), this);
-    connect(laplace, &QAction::triggered, this, [=](){setProcessFunc("laplace");});
+    connect(laplace, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_LAPLACE);
+        statusBar()->showMessage("laplace");
+    });
     ui->menu->addAction(laplace);
     QAction *haarcascade = new QAction(tr("haarcascade"), this);
-    connect(haarcascade, &QAction::triggered, this, [=](){setProcessFunc("haarcascade");});
+    connect(haarcascade, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_CASCADE);
+        statusBar()->showMessage("haarcascade");
+    });
     ui->menu->addAction(haarcascade);
-    QAction *yolov4 = new QAction(tr("yolov4"), this);
-    connect(yolov4, &QAction::triggered, this, [=](){setProcessFunc("yolov4");});
-    ui->menu->addAction(yolov4);
     QAction *yolov5 = new QAction(tr("yolov5"), this);
-    connect(yolov5, &QAction::triggered, this, [=](){setProcessFunc("yolov5");});
+    connect(yolov5, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_YOLOV5);
+        statusBar()->showMessage("yolov5");
+    });
     ui->menu->addAction(yolov5);
     QAction *yolov7 = new QAction(tr("yolov7"), this);
-    connect(yolov7, &QAction::triggered, this, [=](){setProcessFunc("yolov7");});
+    connect(yolov7, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_YOLOV7);
+        statusBar()->showMessage("yolov7");
+    });
     ui->menu->addAction(yolov7);
 
     QAction *opticalFlow = new QAction(tr("opticalFlow"), this);
-    connect(opticalFlow, &QAction::triggered, this, [=](){setProcessFunc("opticalFlow");});
+    connect(opticalFlow, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_OPTICALFLOW);
+        statusBar()->showMessage("opticalFlow");
+    });
     ui->menu->addAction(opticalFlow);
 
     QAction *linear = new QAction(tr("color"), this);
-    connect(linear, &QAction::triggered, this, [=](){setProcessFunc("color");});
+    connect(linear, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_COLOR);
+        statusBar()->showMessage("color");
+    });
     ui->menu->addAction(linear);
     /* capture */
     QAction *captureAction = new QAction(tr("capture"), this);
@@ -319,13 +340,13 @@ void MainWindow::createMenu()
     QAction *stopRecordAction = new QAction(tr("stop record"), this);
     connect(stopRecordAction, &QAction::triggered, this, &MainWindow::stopRecord);
     ui->menu->addAction(stopRecordAction);
-    /* rtmp */
-    QAction *startRtmpAction = new QAction(tr("start streaming"), this);
-    connect(startRtmpAction, &QAction::triggered, this, &MainWindow::startRtmp);
-    ui->menu->addAction(startRtmpAction);
-    QAction *stopRtmpAction = new QAction(tr("stop streaming"), this);
-    connect(stopRtmpAction, &QAction::triggered, this, &MainWindow::stopRtmp);
-    ui->menu->addAction(stopRtmpAction);
+    /* streaming */
+    QAction *startStreamAction = new QAction(tr("start streaming"), this);
+    connect(startStreamAction, &QAction::triggered, this, &MainWindow::startStream);
+    ui->menu->addAction(startStreamAction);
+    QAction *stopStreamAction = new QAction(tr("stop streaming"), this);
+    connect(stopStreamAction, &QAction::triggered, this, &MainWindow::stopStream);
+    ui->menu->addAction(stopStreamAction);
     return;
 }
 

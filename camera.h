@@ -10,8 +10,6 @@
 #include <QMediaMetaData>
 #include <QDateTime>
 #include <QUrl>
-#include <QAction>
-#include <QMenuBar>
 #include <QVector>
 #include <QDebug>
 #include <QThread>
@@ -23,12 +21,13 @@ class Camera : public QObject
 {
     Q_OBJECT
 public:
+    using FnProcess = std::function<void(const QVideoFrame &)>;
     constexpr static int w = 640;
     constexpr static int h = 480;
 public:
     explicit Camera(QObject *parent = nullptr);
     ~Camera();
-    void setProcess(std::function<void(const QVideoFrame &)> process_);
+    void setProcess(const FnProcess &process_);
     void searchAndLock();
     void unlock();
     static QImage imageFromVideoFrame(const QVideoFrame& buffer);

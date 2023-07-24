@@ -1,8 +1,8 @@
 #include "pipeline.h"
 
-void Pipeline::registerFunc(const std::string &funcName_, const Pipeline::Func &func)
+void Pipeline::registerFunc(int index, const Pipeline::FnProcess &func)
 {
-    mapper.insert(std::pair<std::string, Func>(funcName_, func));
+    mapper.insert(std::pair<int, FnProcess>(index, func));
     return;
 }
 
@@ -20,9 +20,9 @@ void Pipeline::dispatch(const QVideoFrame &frame)
     return;
 }
 
-void Pipeline::setFuncName(const std::string &funcName_)
+void Pipeline::setFunc(int index)
 {
-    funcName = funcName_;
+    funcIndex.store(index);
     return;
 }
 
@@ -52,18 +52,17 @@ Pipeline::Pipeline():
     QObject(nullptr)
 {
     /* method */
-    mapper.insert(std::pair<std::string, Func>("canny", &Improcess::canny));
-    mapper.insert(std::pair<std::string, Func>("sobel", &Improcess::sobel));
-    mapper.insert(std::pair<std::string, Func>("laplace", &Improcess::laplace));
-    mapper.insert(std::pair<std::string, Func>("opticalFlow", &Improcess::opticalFlow));
-    mapper.insert(std::pair<std::string, Func>("haarcascade", &Improcess::haarcascade));
-    mapper.insert(std::pair<std::string, Func>("yolov4", &Improcess::yolov4));
-    mapper.insert(std::pair<std::string, Func>("yolov5", &Improcess::yolov5));
-    mapper.insert(std::pair<std::string, Func>("yolov7", &Improcess::yolov7));
-    mapper.insert(std::pair<std::string, Func>("color", &Improcess::color));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_CANNY, &Improcess::canny));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_SOBEL, &Improcess::sobel));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_LAPLACE, &Improcess::laplace));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_OPTICALFLOW, &Improcess::opticalFlow));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_CASCADE, &Improcess::haarcascade));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_YOLOV5, &Improcess::yolov5));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_YOLOV7, &Improcess::yolov7));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_COLOR, &Improcess::color));
     matrix.rotate(90.0);
     /* function */
-    funcName = "color";
+    funcIndex = PROCESS_COLOR;
     imgCache.reserve(8);
 }
 
@@ -77,8 +76,10 @@ void Pipeline::impl()
     while (1) {
         QVideoFrame frame;
         {
-            std::unique_lock<std::mutex> guard(mutex);
-            condit.wait(guard, [this](){return (frameQueue.empty() == false || state == STATE_TERMINATE);});
+            std::unique_lock<std::mutex> locker(mutex);
+            condit.wait(locker, [&]()->bool{
+                            return (frameQueue.empty() == false || state == STATE_TERMINATE);
+                        });
             if (state == STATE_TERMINATE) {
                 break;
             }
@@ -89,7 +90,8 @@ void Pipeline::impl()
             }
         }
         /* process */
-        auto it = mapper.find(funcName);
+        int index = funcIndex.load();
+        auto it = mapper.find(index);
         if (it == mapper.end()) {
             continue;
         }
@@ -127,7 +129,7 @@ void Pipeline::impl()
         /* record */
         Recorder::instance().rawEncode(img.data);
 
-        /* rtmp */
+        /* stream */
         RtmpPublisher::instance().encode(img.data);
         imgCache.put(rgba);
     }

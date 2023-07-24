@@ -28,6 +28,7 @@ SOURCES += \
     mainwindow.cpp \
     pipeline.cpp \
     setting.cpp \
+    transmitter.cpp \
     yolo.cpp \
     yolov4.cpp \
     yolov5.cpp \
@@ -42,7 +43,9 @@ HEADERS += \
     mainwindow.h \
     openglwidget.h \
     pipeline.h \
+    process_def.h \
     setting.h \
+    transmitter.h \
     util.h \
     yolo.h \
     yolov4.h \
@@ -125,7 +128,7 @@ win32 {
     INCLUDEPATH += $$LIBYUV_PATH/include
     LIBS += -L$$LIBYUV_PATH/lib -lyuv
     #jpeg
-    LIBJPEG_PATH =  $$LIBPATH/libjpeg
+    LIBJPEG_PATH = $$LIBPATH/libjpeg
     LIBS += -L$$LIBJPEG_PATH/lib -llibjpeg
     #opencv
     OPENCV_PATH = $$LIBPATH/opencv455

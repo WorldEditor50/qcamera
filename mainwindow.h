@@ -14,9 +14,11 @@
 #include <QSurfaceFormat>
 #include "camera.h"
 #include "imageprocess.h"
+#include "process_def.h"
 #include "setting.h"
 #include "recorder.h"
 #include "rtmppublisher.h"
+#include "rtsppublisher.h"
 #include "pipeline.h"
 #include "configuration.h"
 
@@ -43,6 +45,7 @@ public:
     ~MainWindow();
 signals:
     void send(const QImage &img);
+    void modelReady();
 public slots:
     void requestPermission();
     void capture();
@@ -51,9 +54,9 @@ public slots:
     void setPage(int index);
     void startRecord();
     void stopRecord();
-    void startRtmp();
-    void stopRtmp();
-    void setProcessFunc(const QString &funcName);
+    void startStream();
+    void stopStream();
+    void launch();
 protected:
     bool event(QEvent *ev) override;
     void closeEvent(QCloseEvent *event) override;

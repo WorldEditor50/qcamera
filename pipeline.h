@@ -7,6 +7,7 @@
 #include <memory>
 #include <thread>
 #include <condition_variable>
+#include <atomic>
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -14,6 +15,7 @@
 #include <QFile>
 #include <QDateTime>
 #include <QAtomicInt>
+#include "process_def.h"
 #include "libyuv.h"
 #include "libyuv/convert_argb.h"
 #include "imageprocess.h"
@@ -28,7 +30,7 @@ class ImageCache
 private:
     std::mutex mutex;
     std::queue<unsigned char*> cache;
-    constexpr static int max_cache_len = 16;
+    constexpr static int max_cache_len = 64;
 public:
     constexpr static int img_size = IMG_WIDTH*IMG_HEIGHT*4;
 public:
@@ -90,18 +92,20 @@ public:
         STATE_EMPTY,
         STATE_TERMINATE
     };
-    using Func = std::function<cv::Mat(int, int, unsigned char*)>;
-    constexpr static int max_thread_num = 2;
+    using FnProcess = std::function<cv::Mat(int, int, unsigned char*)>;
+    constexpr static int max_thread_num = 4;
     constexpr static int w = IMG_WIDTH;
     constexpr static int h = IMG_HEIGHT;
 private:
-    std::map<std::string, Func> mapper;
+    std::map<int, FnProcess> mapper;
+    std::atomic<int> funcIndex;
+
     std::queue<QVideoFrame> frameQueue;
     std::mutex mutex;
     std::condition_variable condit;
     std::thread threads[max_thread_num];
+
     State state;
-    std::string funcName;
     ImageCache imgCache;
     QMatrix matrix;
 public:
@@ -110,9 +114,9 @@ public:
         static Pipeline pipeline;
         return pipeline;
     }
-    void registerFunc(const std::string &funcName_, const Func &func);
+    void registerFunc(int index, const FnProcess &func);
     void dispatch(const QVideoFrame &frame);
-    void setFuncName(const std::string &funcName_);
+    void setFunc(int index);
     void start();
     void stop();
 signals:

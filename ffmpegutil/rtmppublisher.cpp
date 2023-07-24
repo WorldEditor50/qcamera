@@ -39,13 +39,14 @@ void RtmpPublisher::start(int width, int height, const std::string &url)
         state = STATE_NONE;
         return;
     }
-
-    /* open url */
-    ret = avio_open(&outputContext->pb, url.c_str(), AVIO_FLAG_WRITE);
-    if (ret != 0) {
-        std::cout<<"can not open outputContext, avio_open failed. "<<std::endl;
-        state = STATE_NONE;
-        return;
+    if (!(outputContext->oformat->flags & AVFMT_NOFILE)) {
+        /* open url */
+        ret = avio_open(&outputContext->pb, outputContext->url, AVIO_FLAG_WRITE);
+        if (ret != 0) {
+            std::cout<<"can not open outputContext, avio_open failed. "<<std::endl;
+            state = STATE_NONE;
+            return;
+        }
     }
 
     /* encoder */
@@ -62,15 +63,17 @@ void RtmpPublisher::start(int width, int height, const std::string &url)
         return;
     }
     fps = 30;
+    codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
     codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
-    codecContext->bit_rate = 400000; //sharpness
-    codecContext->gop_size = 50; // step
+    codecContext->width = width;
+    codecContext->height = height;
+    codecContext->bit_rate = 90000; //sharpness
+    codecContext->gop_size = 5; // step
     codecContext->framerate.num = fps;// play speed
     codecContext->framerate.den = 1;
     codecContext->time_base = av_inv_q(codecContext->framerate);
-    codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
-    codecContext->width = width;
-    codecContext->height = height;
+    codecContext->max_b_frames = 0;
+    codecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
     codecContext->sample_aspect_ratio.num = width;
     codecContext->sample_aspect_ratio.den = height;
 
@@ -103,7 +106,7 @@ void RtmpPublisher::start(int width, int height, const std::string &url)
     AVDictionary *options = nullptr;
     av_dict_set(&options, "flvflags", "no_duration_filesize", 0);
     av_dict_set(&options, "rtmp_transport", "tcp", 0);
-    av_dict_set(&options, "stimeout", "8000000", 0);
+    //av_dict_set(&options, "stimeout", "8000000", 0);
     ret = avformat_write_header(outputContext, &options);
     if (ret != 0) {
         std::cout<<"Publisher: can not write header. code="<<ret<<std::endl;

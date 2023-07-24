@@ -19,7 +19,7 @@ Camera::~Camera()
     stop();
 }
 
-void Camera::setProcess(std::function<void (const QVideoFrame &)> process_)
+void Camera::setProcess(const Camera::FnProcess &process_)
 {
     process = process_;
     return;
