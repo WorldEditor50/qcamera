@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&Transmitter::instance(), &Transmitter::sendImage,
             this, &MainWindow::updateImage, Qt::QueuedConnection);
 #endif
-    Pipeline::instance().setFunc(PROCESS_COLOR);
+    Pipeline::instance().setFunc(PROCESS_SOBEL);
     camera->setProcess([=](const QVideoFrame &frame) {
         Pipeline::instance().dispatch(frame);
     });
@@ -204,7 +204,7 @@ void MainWindow::startRecord()
     QString format = Configuration::instance().getVideoFormat();
 #ifdef Q_OS_ANDROID
     QString fileName = QString("%1/%2.%3").arg(videoPath).arg(dateTime).arg(format);
-    Recorder::instance().start(Camera::h, Camera::w, AV_PIX_FMT_RGB24,
+    Recorder::instance().start(camera->height, camera->width, AV_PIX_FMT_RGB24,
                                format.toStdString(), fileName.toStdString());
 #else
     QString fileName = QString("./%1.%2").arg(dateTime).arg(format);
@@ -249,7 +249,11 @@ void MainWindow::stopStream()
 void MainWindow::launch()
 {
     /* open camera */
+#ifdef Q_OS_ANDROID
+    camera->start(1, 640, 480);
+#else
     camera->start(0, 640, 480);
+#endif
     ui->settingWidget->setDevice(camera);
     /* pipeline */
     Pipeline::instance().start();
@@ -311,6 +315,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 #endif
     Pipeline::instance().stop();
+    camera->stop();
     return QMainWindow::closeEvent(event);
 }
 
@@ -320,8 +325,7 @@ void MainWindow::createMenu()
     QAction *quitAction = new QAction(tr("Quit"), this);
     connect(quitAction, &QAction::triggered, this, [=](){
         readyQuit = true;
-        //close();
-        qApp->quit();
+        close();
     });
     ui->menu->addAction(quitAction);
     /* settings */

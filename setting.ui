@@ -90,13 +90,6 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0">
-    <widget class="QPushButton" name="backBtn">
-     <property name="text">
-      <string>back</string>
-     </property>
-    </widget>
-   </item>
    <item row="3" column="1">
     <widget class="QComboBox" name="videoFormatComboBox"/>
    </item>
@@ -138,6 +131,13 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="5" column="1">
+    <widget class="QPushButton" name="backBtn">
+     <property name="text">
+      <string>back</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

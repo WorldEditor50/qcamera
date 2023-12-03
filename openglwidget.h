@@ -139,11 +139,37 @@ class OpenGLWidget : public QOpenGLWidget
 {
     Q_OBJECT
 public:
-    struct Frame {
+    class Frame
+    {
+    public:
         unsigned char *data;
         int width;
         int height;
-        Frame():data(nullptr),width(0),height(0){}
+        std::size_t totalSize;
+    public:
+        Frame():data(nullptr),width(0),height(0),totalSize(0){}
+        ~Frame()
+        {
+            if (data != nullptr) {
+                delete [] data;
+                data = nullptr;
+            }
+        }
+        void create(int h, int w, unsigned char*rgb)
+        {
+            width = w;
+            height = h;
+            std::size_t size = h*w*3;
+            if (totalSize < size) {
+                totalSize = size;
+                if (data != nullptr) {
+                    delete [] data;
+                }
+                data = new unsigned char[size];
+            }
+            memcpy(data, rgb, totalSize);
+            return;
+        }
     };
 private:
     Frame frame;
@@ -152,9 +178,7 @@ public:
     OpenGLWidget(QWidget *parent):QOpenGLWidget(parent){}
     inline void setFrame(int h, int w, unsigned char *data)
     {
-        frame.data = data;
-        frame.width = w;
-        frame.height = h;
+        frame.create(h, w, data);
         update();
         return;
     }

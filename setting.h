@@ -21,8 +21,10 @@ public:
     QString getStreamURL();
 signals:
     void back();
-public:
-    void updateDevice(int index);
+public slots:
+    void onDeviceChanged(int index);
+    void onResolutionChanged(const QString &res);
+    void updateConfigure();
 private:
     Ui::Setting *ui;
     Camera *camera;

@@ -15,6 +15,7 @@ private:
     QString videoPath;
     QString videoFormat;
     QString captureStyle;
+    int cameraID;
 public:
     static Configuration& instance()
     {
@@ -30,9 +31,11 @@ public:
     QString getVideoPath() const {return videoPath;}
     QString getVideoFormat() const {return videoFormat;}
     QString getCaptureStyle() const {return captureStyle;}
+    int getCameraID() const {return cameraID;}
     /* set */
     void setVideoFormat(const QString format);
     void setCaptureStyle(const QString style);
+    void setCameraID(int id) {cameraID = id;}
 private:
     Configuration();
 };

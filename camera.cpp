@@ -44,6 +44,9 @@ void Camera::start(int id, int w, int h)
     cameraID = id;
     width = w;
     height = h;
+#ifdef Q_OS_ANDROID
+    Configuration::instance().setCameraID(id);
+#endif
     /* select camera */
     device = new QCamera(infoList.at(cameraID));
     probe = new QVideoProbe;

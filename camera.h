@@ -16,11 +16,16 @@
 #include <QTimer>
 #include <functional>
 #include "logger.hpp"
+#include "../configuration.h"
 
 class Camera : public QObject
 {
     Q_OBJECT
 public:
+    enum Type {
+        ANDROID_BACK = 0,
+        ANDROID_FRONT = 1
+    };
     using FnProcess = std::function<void(const QVideoFrame &)>;
 public:
     explicit Camera(QObject *parent = nullptr);

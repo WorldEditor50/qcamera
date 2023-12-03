@@ -37,7 +37,10 @@ void Pipeline::start()
 
 void Pipeline::stop()
 {
-    if (state != STATE_TERMINATE) {
+    if (state == STATE_NONE) {
+        return;
+    }
+    {
         std::unique_lock<std::mutex> guard(mutex);
         state = STATE_TERMINATE;
         condit.notify_all();
@@ -78,6 +81,7 @@ void Pipeline::run()
                             return (frameQueue.empty() == false || state == STATE_TERMINATE);
                         });
             if (state == STATE_TERMINATE) {
+                state = STATE_NONE;
                 break;
             }
             frame = std::move(frameQueue.front());
@@ -92,6 +96,11 @@ void Pipeline::run()
         if (ret != 0) {
             continue;
         }
+#ifdef Q_OS_ANDROID
+        if (Configuration::instance().getCameraID() == 1) {
+            cv::flip(img, img, 0);
+        }
+#endif
         /* process */
         int index = funcIndex.load();
         auto it = mapper.find(index);

@@ -16,6 +16,7 @@
 #include "recorder.h"
 #include "rtmppublisher.h"
 #include "transmitter.h"
+#include "configuration.h"
 #include "improcess/transcoder.h"
 #include "improcess/improcess.h"
 
