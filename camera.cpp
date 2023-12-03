@@ -9,14 +9,12 @@ Camera::Camera(QObject *parent)
       recorder(nullptr),
       id(0)
 {
-    if (infoList.isEmpty()) {
-        return;
-    }
+    Camera::infoList = QCameraInfo::availableCameras();
 }
 
 Camera::~Camera()
 {
-    stop();
+
 }
 
 void Camera::setProcess(const Camera::FnProcess &process_)
@@ -41,11 +39,11 @@ void Camera::start(int devID)
 {
     id = devID;
     /* select camera */
-    device = new QCamera(infoList.at(devID));
-    probe = new QVideoProbe(this);
+    device = new QCamera(infoList.at(devID), this);
+    probe = new QVideoProbe(device);
     probe->setSource(device);
     connect(probe, &QVideoProbe::videoFrameProbed,
-            this, &Camera::processFrame, Qt::DirectConnection);
+            this, &Camera::processFrame, Qt::QueuedConnection);
     /* capture mode */
 #ifdef Q_OS_ANDROID
     device->setCaptureMode(QCamera::CaptureVideo);
@@ -123,14 +121,9 @@ void Camera::stop()
         return;
     }
     device->stop();
-    device->deleteLater();
-    probe->deleteLater();
-    imagecapture->deleteLater();
-    recorder->deleteLater();
-    device = nullptr;
-    probe = nullptr;
-    imagecapture = nullptr;
-    recorder = nullptr;
+    disconnect(probe, &QVideoProbe::videoFrameProbed,
+            this, &Camera::processFrame);
+    probe->flush();
     return;
 }
 

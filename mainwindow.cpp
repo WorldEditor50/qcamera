@@ -43,23 +43,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     /* camera */
     connect(this, &MainWindow::send, this, &MainWindow::updateImage, Qt::QueuedConnection);
-    Camera::infoList = QCameraInfo::availableCameras();
     /* start camera */
     camera = new Camera(this);
     ui->settingWidget->setDevice(camera);
 #if USE_OPENGL
-    connect(&Pipeline::instance(), &Pipeline::sendGlImage,
+    connect(&Transmitter::instance(), &Transmitter::sendGlImage,
             this, &MainWindow::updateGL, Qt::QueuedConnection);
 #else
-    connect(&Pipeline::instance(), &Pipeline::sendImage,
+    connect(&Transmitter::instance(), &Transmitter::sendImage,
             this, &MainWindow::updateImage, Qt::QueuedConnection);
 #endif
     Pipeline::instance().setFunc(PROCESS_COLOR);
     camera->setProcess([=](const QVideoFrame &frame) {
         Pipeline::instance().dispatch(frame);
     });
-    /* pipeline */
-    Pipeline::instance().start();
     /* load model */
     connect(this, &MainWindow::modelReady, this, &MainWindow::launch, Qt::QueuedConnection);
     QtConcurrent::run([=](){
@@ -95,7 +92,8 @@ void MainWindow::requestPermission()
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.CAMERA",
-        "android.permission.INTERNET"
+        "android.permission.INTERNET",
+        "android.permission.SET_ORIENTATION"
     };
     for (QString &permission : permissions) {
         QtAndroid::PermissionResult result = QtAndroid::checkPermission(permission);
@@ -138,7 +136,7 @@ void MainWindow::updateImage(const QImage &img)
     return;
 }
 
-void MainWindow::updateGL(int w, int h, unsigned char *data)
+void MainWindow::updateGL(int h, int w, unsigned char *data)
 {
     if (readyCapture.load()) {
         QString dateTime = QDateTime::currentDateTime().toString("yyyyMMddhhmmss");
@@ -148,12 +146,12 @@ void MainWindow::updateGL(int w, int h, unsigned char *data)
 #else
         QString path = QString("./%1%2").arg(dateTime).arg(".jpeg");
 #endif
-        QImage img(data, w, h, QImage::Format_ARGB32);
+        QImage img(data, w, h, QImage::Format_RGB888);
         img.save(path);
         statusBar()->showMessage(path);
         readyCapture.store(0);
     }
-    ui->openGLWidget->setFrame(w, h, data);
+    ui->openGLWidget->setFrame(h, w, data);
     return;
 }
 
@@ -193,11 +191,14 @@ void MainWindow::startRecord()
     QString format = Configuration::instance().getVideoFormat();
 #ifdef Q_OS_ANDROID
     QString fileName = QString("%1/%2.%3").arg(videoPath).arg(dateTime).arg(format);
+    Recorder::instance().start(Camera::h, Camera::w, AV_PIX_FMT_RGB24,
+                               format.toStdString(), fileName.toStdString());
 #else
     QString fileName = QString("./%1.%2").arg(dateTime).arg(format);
-#endif
-    Recorder::instance().start(IMG_WIDTH, IMG_HEIGHT, AV_PIX_FMT_RGB24,
+    Recorder::instance().start(Camera::w, Camera::h, AV_PIX_FMT_RGB24,
                                format.toStdString(), fileName.toStdString());
+#endif
+
     statusBar()->showMessage("Recording");
     return;
 }
@@ -216,7 +217,11 @@ void MainWindow::startStream()
         QMessageBox::warning(this, "Notice", "empty rtmp url", QMessageBox::Ok);
         return;
     }
-    RtspPublisher::instance().start(IMG_WIDTH, IMG_HEIGHT, url.toStdString());
+#ifdef Q_OS_ANDROID
+    RtspPublisher::instance().start(Camera::h, Camera::w, url.toStdString());
+#else
+    RtspPublisher::instance().start(Camera::w, Camera::h, url.toStdString());
+#endif
     statusBar()->showMessage("START STREAMING");
     return;
 }
@@ -231,6 +236,35 @@ void MainWindow::stopStream()
 void MainWindow::launch()
 {
     camera->start(0);
+    /* pipeline */
+    Pipeline::instance().start();
+    return;
+}
+
+void MainWindow::onRotate()
+{
+#ifdef Q_OS_ANDROID
+    QAndroidJniEnvironment env;
+    QAndroidJniObject activity;
+    jint orient = activity.callMethod<jint>("getRequestedOrientation");
+    if (env->ExceptionCheck()) {
+        QMessageBox::warning(this,
+                             "getRequestedOrientation exception occured",
+                             "ERROR",
+                             QMessageBox::Ok);
+        env->ExceptionClear();
+        return;
+    }
+    orient = orient == 1 ? 0 : 1;
+    activity.callMethod<void>("setRequestedOrientation", "(I)V", orient);
+    if (env->ExceptionCheck()) {
+        QMessageBox::warning(this,
+                             "setRequestedOrientation exception occured",
+                             "ERROR",
+                             QMessageBox::Ok);
+        env->ExceptionClear();
+    }
+#endif
     return;
 }
 
@@ -271,13 +305,18 @@ void MainWindow::createMenu()
     QAction *quitAction = new QAction(tr("Quit"), this);
     connect(quitAction, &QAction::triggered, this, [=](){
         readyQuit = true;
-        qApp->quit();
+        close();
     });
     ui->menu->addAction(quitAction);
     /* settings */
     QAction *settingAction = new QAction(tr("Settings"), this);
     connect(settingAction, &QAction::triggered, this, [=](){setPage(PAGE_SETTINGS);});
     ui->menu->addAction(settingAction);
+
+    /* rotate screen */
+    QAction *rotateScreenAction = new QAction(tr("Rotate"), this);
+    connect(rotateScreenAction, &QAction::triggered, this, &MainWindow::onRotate);
+    ui->menu->addAction(rotateScreenAction);
     /* method */
     QAction *canny = new QAction(tr("canny"), this);
     connect(canny, &QAction::triggered, this, [=](){

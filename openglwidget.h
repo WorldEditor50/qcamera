@@ -150,7 +150,7 @@ private:
     RgbaRender render;
 public:
     OpenGLWidget(QWidget *parent):QOpenGLWidget(parent){}
-    inline void setFrame(int w, int h, unsigned char *data)
+    inline void setFrame(int h, int w, unsigned char *data)
     {
         frame.data = data;
         frame.width = w;

@@ -20,25 +20,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     camera.cpp \
-    cascade.cpp \
     configuration.cpp \
-    imageprocess.cpp \
     imageviewer.cpp \
     main.cpp \
     mainwindow.cpp \
     pipeline.cpp \
     setting.cpp \
-    transmitter.cpp \
-    yolo.cpp \
-    yolov4.cpp \
-    yolov5.cpp \
-    yolov7.cpp
+    transmitter.cpp
 
 HEADERS += \
     camera.h \
-    cascade.h \
     configuration.h \
-    imageprocess.h \
     imageviewer.h \
     mainwindow.h \
     openglwidget.h \
@@ -47,10 +39,6 @@ HEADERS += \
     setting.h \
     transmitter.h \
     util.h \
-    yolo.h \
-    yolov4.h \
-    yolov5.h \
-    yolov7.h
 
 FORMS += \
     imageviewer.ui \
@@ -58,6 +46,7 @@ FORMS += \
     setting.ui
 include($$PWD/shared/shared.pri)
 include($$PWD/ffmpegutil/ffmpegutil.pri)
+include($$PWD/improcess/improcess.pri)
 contains(ANDROID_TARGET_ARCH, arm64-v8a) {
     # libyuv
     INCLUDEPATH += $$PWD/libyuv/include
@@ -169,6 +158,7 @@ win32 {
 
 }
 # Default rules for deployment.
+TARGET = qcamera
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target

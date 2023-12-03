@@ -22,21 +22,10 @@ public:
         int label;
         float prob;
     };
-
-public:
-    static Yolov4& instance()
-    {
-        static Yolov4 yolov4;
-        return yolov4;
-    }
-    bool load(const std::string &modelType);
-    void detect(const cv::Mat& image, QVector<Object>& objects);
-    void draw(cv::Mat& image, const QVector<Object>& objects);
 private:
-    Yolov4();
-public:
     ncnn::Mutex lock;
 private:
+
 #ifdef YOLOV4_TINY
     constexpr static int target_size = 416;//416;
 #else
@@ -46,6 +35,18 @@ private:
     ncnn::Net yolov4;
     ncnn::UnlockedPoolAllocator blob_pool_allocator;
     ncnn::PoolAllocator workspace_pool_allocator;
+public:
+    Yolov4();
+    ~Yolov4();
+    static Yolov4& instance()
+    {
+        static Yolov4 yolov4;
+        return yolov4;
+    }
+    bool load(const std::string &modelType);
+    void detect(const cv::Mat& image, std::vector<Object>& objects);
+    void draw(cv::Mat& image, const std::vector<Object>& objects);
+
 };
 
 #endif // YOLOV4_H

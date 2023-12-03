@@ -66,7 +66,8 @@ void Yolo::draw(cv::Mat &image, const std::vector<Object> &objects)
         if (x + label_size.width > image.cols)
             x = image.cols - label_size.width;
 
-        cv::rectangle(image, cv::Rect(cv::Point(x, y), cv::Size(label_size.width, label_size.height + baseLine)),
+        cv::rectangle(image,
+                      cv::Rect(cv::Point(x, y), cv::Size(label_size.width, label_size.height + baseLine)),
                       cc, -1);
 
         cv::putText(image, text, cv::Point(x, y + label_size.height),

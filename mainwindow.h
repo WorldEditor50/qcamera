@@ -13,7 +13,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QSurfaceFormat>
 #include "camera.h"
-#include "imageprocess.h"
+#include "improcess/improcess.h"
 #include "process_def.h"
 #include "setting.h"
 #include "recorder.h"
@@ -24,6 +24,8 @@
 
 #ifdef Q_OS_ANDROID
 #include <QtAndroid>
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroidExtras/QAndroidJniObject>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -50,13 +52,14 @@ public slots:
     void requestPermission();
     void capture();
     void updateImage(const QImage &img);
-    void updateGL(int w, int h, unsigned char* data);
+    void updateGL(int h, int w, unsigned char* data);
     void setPage(int index);
     void startRecord();
     void stopRecord();
     void startStream();
     void stopStream();
     void launch();
+    void onRotate();
 protected:
     bool event(QEvent *ev) override;
     void closeEvent(QCloseEvent *event) override;

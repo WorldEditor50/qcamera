@@ -21,7 +21,7 @@ bool Yolov4::load(const std::string &modelType)
     return true;
 }
 
-void Yolov4::detect(const cv::Mat &image, QVector<Object> &objects)
+void Yolov4::detect(const cv::Mat &image, std::vector<Object> &objects)
 {
     if (hasLoadModel == false) {
         return;
@@ -29,7 +29,7 @@ void Yolov4::detect(const cv::Mat &image, QVector<Object> &objects)
     int img_w = image.cols;
     int img_h = image.rows;
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(image.data,
-                                                 ncnn::Mat::PIXEL_RGBA2RGB,
+                                                 ncnn::Mat::PIXEL_RGB,
                                                  img_w, img_h,
                                                  target_size, target_size);
 
@@ -61,7 +61,7 @@ void Yolov4::detect(const cv::Mat &image, QVector<Object> &objects)
     return;
 }
 
-void Yolov4::draw(cv::Mat &rgb, const QVector<Object> &objects)
+void Yolov4::draw(cv::Mat &rgb, const std::vector<Object> &objects)
 {
     static const char* class_names[] = {"background", "person", "bicycle",
                                         "car", "motorbike", "aeroplane", "bus", "train", "truck",
@@ -80,12 +80,12 @@ void Yolov4::draw(cv::Mat &rgb, const QVector<Object> &objects)
                                         "refrigerator", "book", "clock", "vase", "scissors",
                                         "teddy bear", "hair drier", "toothbrush"
                                        };
-    for (int i = 0; i < objects.size(); i++) {
+    for (std::size_t i = 0; i < objects.size(); i++) {
         const Object& obj = objects[i];
 
         cv::rectangle(rgb, obj.rect, cv::Scalar(0, 255, 0));
 
-        std::string text = std::string(class_names[obj.label]) + std::to_string( obj.prob * 100);
+        std::string text = std::string(class_names[obj.label]) + std::to_string(obj.prob * 100);
         int baseLine = 0;
         cv::Size label_size = cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
@@ -133,4 +133,10 @@ Yolov4::Yolov4():hasLoadModel(false)
     yolov4.opt.use_shader_pack8 = false;
     yolov4.opt.use_image_storage = false;
     return;
+}
+
+Yolov4::~Yolov4()
+{
+    blob_pool_allocator.clear();
+    workspace_pool_allocator.clear();
 }

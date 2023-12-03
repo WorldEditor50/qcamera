@@ -40,9 +40,9 @@ private:
     constexpr static float prob_threshold = 0.25f;
     constexpr static float nms_threshold = 0.45f;
     constexpr static int MAX_STRIDE = 32;
-private:
-    Yolov7();
 public:
+    Yolov7();
+    ~Yolov7();
     inline static Yolov7& instance()
     {
         static Yolov7 yolo7;

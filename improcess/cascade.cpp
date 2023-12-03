@@ -1,5 +1,9 @@
 #include "cascade.h"
 #include <QDebug>
+Cascade::Cascade():hasLoadModel(false)
+{
+
+}
 
 bool Cascade::load(const std::string &path)
 {
@@ -34,7 +38,7 @@ void Cascade::detect(cv::Mat &frame)
         return;
     }
     cv::Mat gray;
-    cv::cvtColor(frame, gray, cv::COLOR_RGBA2GRAY);
+    cv::cvtColor(frame, gray, cv::COLOR_RGB2GRAY);
     cv::equalizeHist(gray, gray);
     std::vector<cv::Rect> faces;
     faceCascade.detectMultiScale(gray, faces);
@@ -43,8 +47,7 @@ void Cascade::detect(cv::Mat &frame)
         cv::Point center(faces[i].x + faces[i].width/2,
                          faces[i].y + faces[i].height/2);
         cv::ellipse(frame, center, cv::Size(faces[i].width/2, faces[i].height/2),
-                    0, 0, 360, cv::Scalar(255, 0, 255), 4);
-#if 0
+                    0, 0, 360, cv::Scalar(0, 255, 0, 255), 4);
         cv::Mat faceROI = gray(faces[i]);
         /* eyes */
         std::vector<cv::Rect> eyes;
@@ -64,12 +67,20 @@ void Cascade::detect(cv::Mat &frame)
                                   upperBodies[i].y + upperBodies[i].height);
             cv::rectangle(frame, topLeft, bottomRight, cv::Scalar(0, 255, 0), 4);
         }
-#endif
     }
     return;
 }
 
-Cascade::Cascade():hasLoadModel(false)
+void Cascade::detectFace(const cv::Mat &img, std::vector<cv::Rect> &boundingRects)
 {
-
+    if (hasLoadModel == false) {
+        return;
+    }
+    cv::Mat gray;
+    cv::cvtColor(img, gray, cv::COLOR_RGB2GRAY);
+    cv::equalizeHist(gray, gray);
+    faceCascade.detectMultiScale(gray, boundingRects);
+    return;
 }
+
+

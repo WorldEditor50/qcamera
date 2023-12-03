@@ -23,12 +23,9 @@ protected:
     constexpr static float prob_threshold = 0.25f;
     constexpr static float nms_threshold = 0.45f;
     constexpr static int MAX_STRIDE = 64;
-    ncnn::Mutex lock;
-    ncnn::UnlockedPoolAllocator blob_pool_allocator;
-    ncnn::PoolAllocator workspace_pool_allocator;
-private:
-    Yolov5();
 public:
+    Yolov5();
+    ~Yolov5();
     static Yolov5& instance()
     {
         static Yolov5 yolov5;

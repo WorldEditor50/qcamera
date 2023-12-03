@@ -14,6 +14,8 @@ private:
     cv::CascadeClassifier faceCascade;
     cv::CascadeClassifier eyesCascade;
     cv::CascadeClassifier upperbodyCascade;
+private:
+    Cascade();
 public:
     inline static Cascade& instance()
     {
@@ -22,8 +24,8 @@ public:
     }
     bool load(const std::string &path);
     void detect(cv::Mat &frame);
-private:
-    Cascade();
+    void detectFace(const cv::Mat &img, std::vector<cv::Rect> &boundingRects);
+
 };
 
 #endif // CASCADE_H
