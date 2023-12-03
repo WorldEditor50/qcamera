@@ -1,0 +1,14 @@
+QPushButton {
+    min-width: 80px;
+    max-height: 30px;
+}
+
+QComboBox {
+    min-width: 100px;
+    max-height: 50px;
+}
+
+QLineEdit {
+    min-width: 100px;
+    max-height: 50px;
+}

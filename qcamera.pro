@@ -36,6 +36,7 @@ HEADERS += \
     openglwidget.h \
     pipeline.h \
     process_def.h \
+    qssloader.h \
     setting.h \
     transmitter.h \
     util.h \
@@ -178,4 +179,5 @@ contains(ANDROID_TARGET_ARCH,arm64-v8a) {
 }
 
 RESOURCES += \
-    models.qrc
+    models.qrc \
+    res.qrc

@@ -8,11 +8,8 @@ void Pipeline::registerFunc(int index, const Pipeline::FnProcess &func)
 
 void Pipeline::dispatch(const QVideoFrame &frame)
 {
-    {
-         std::unique_lock<std::mutex> guard(mutex);
-         if (state == STATE_TERMINATE || state == STATE_NONE) {
-             return;
-         }
+    if (state == STATE_TERMINATE || state == STATE_NONE) {
+        return;
     }
     std::unique_lock<std::mutex> guard(mutex);
     frameQueue.push(frame);
@@ -89,16 +86,16 @@ void Pipeline::run()
                 continue;
             }
         }
-        /* process */
-        int index = funcIndex.load();
-        auto it = mapper.find(index);
-        if (it == mapper.end()) {
-            continue;
-        }
         /* transcode */
         cv::Mat img;
         int ret = Transcoder::videoFrameToMat(frame, img);
         if (ret != 0) {
+            continue;
+        }
+        /* process */
+        int index = funcIndex.load();
+        auto it = mapper.find(index);
+        if (it == mapper.end()) {
             continue;
         }
         it->second(img, out);
@@ -108,10 +105,8 @@ void Pipeline::run()
 #if USE_OPENGL
         if (out.channels() == 1) {
             cv::cvtColor(out, out, cv::COLOR_GRAY2RGB);
-            Transmitter::instance().sendGlImage(out.rows, out.cols, out.data);
-        } else {
-            Transmitter::instance().sendGlImage(out.rows, out.cols, out.data);
         }
+        Transmitter::instance().sendGlImage(out.rows, out.cols, out.data);
 #else
         QImage image = Transcoder::fromMat(out);
         Transmitter::instance().sendImage(image);

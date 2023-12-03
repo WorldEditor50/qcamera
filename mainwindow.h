@@ -21,6 +21,7 @@
 #include "rtsppublisher.h"
 #include "pipeline.h"
 #include "configuration.h"
+#include "qssloader.h"
 
 #ifdef Q_OS_ANDROID
 #include <QtAndroid>

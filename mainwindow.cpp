@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent)
     , readyCapture(0)
 {
     ui->setupUi(this);
+    /* load qss */
+    setStyleSheet(QssLoader::get(":/qss/app-style.qss"));
     /* android permission */
     requestPermission();
     /* ffmepg network */
@@ -35,17 +37,24 @@ MainWindow::MainWindow(QWidget *parent)
     createMenu();
     /* back */
     connect(ui->imageViewer, &ImageViewer::back, this, [=](){
+#if USE_OPENGL
+        setPage(PAGE_OPENGL_VIDEO);
+#else
         setPage(PAGE_VIDEO);
+#endif
     });
     connect(ui->settingWidget, &Setting::back, this, [=](){
+#if USE_OPENGL
+        setPage(PAGE_OPENGL_VIDEO);
+#else
         setPage(PAGE_VIDEO);
+#endif
     });
 
     /* camera */
     connect(this, &MainWindow::send, this, &MainWindow::updateImage, Qt::QueuedConnection);
     /* start camera */
     camera = new Camera(this);
-    ui->settingWidget->setDevice(camera);
 #if USE_OPENGL
     connect(&Transmitter::instance(), &Transmitter::sendGlImage,
             this, &MainWindow::updateGL, Qt::QueuedConnection);
@@ -66,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent)
         ret = Cascade::instance().load(modelPath.toStdString());
 #else
         QString modelPath = "D:/home/MyProject/qcamera/ncnn/models";
-        //ret = Cascade::instance().load("");
+        ret = Cascade::instance().load("D:/home/MyProject/qcamera/data");
 #endif
         ret = Yolov7::instance().load(QString("%1/yolov7-tiny").arg(modelPath).toStdString());
         ret = Yolov5::instance().load(QString("%1/yolov5s_6.0").arg(modelPath).toStdString());
@@ -150,6 +159,10 @@ void MainWindow::updateGL(int h, int w, unsigned char *data)
         img.save(path);
         statusBar()->showMessage(path);
         readyCapture.store(0);
+        /* display image */
+        setPage(PAGE_IMAGE);
+        QPixmap pixmap = QPixmap::fromImage(img);
+        ui->imageViewer->display(pixmap);
     }
     ui->openGLWidget->setFrame(h, w, data);
     return;
@@ -195,7 +208,7 @@ void MainWindow::startRecord()
                                format.toStdString(), fileName.toStdString());
 #else
     QString fileName = QString("./%1.%2").arg(dateTime).arg(format);
-    Recorder::instance().start(Camera::w, Camera::h, AV_PIX_FMT_RGB24,
+    Recorder::instance().start(camera->width, camera->height, AV_PIX_FMT_RGB24,
                                format.toStdString(), fileName.toStdString());
 #endif
 
@@ -218,9 +231,9 @@ void MainWindow::startStream()
         return;
     }
 #ifdef Q_OS_ANDROID
-    RtspPublisher::instance().start(Camera::h, Camera::w, url.toStdString());
+    RtspPublisher::instance().start(camera->height, camera->width, url.toStdString());
 #else
-    RtspPublisher::instance().start(Camera::w, Camera::h, url.toStdString());
+    RtspPublisher::instance().start(camera->width, camera->height, url.toStdString());
 #endif
     statusBar()->showMessage("START STREAMING");
     return;
@@ -235,7 +248,9 @@ void MainWindow::stopStream()
 
 void MainWindow::launch()
 {
-    camera->start(0);
+    /* open camera */
+    camera->start(0, 640, 480);
+    ui->settingWidget->setDevice(camera);
     /* pipeline */
     Pipeline::instance().start();
     return;
@@ -305,7 +320,8 @@ void MainWindow::createMenu()
     QAction *quitAction = new QAction(tr("Quit"), this);
     connect(quitAction, &QAction::triggered, this, [=](){
         readyQuit = true;
-        close();
+        //close();
+        qApp->quit();
     });
     ui->menu->addAction(quitAction);
     /* settings */

@@ -22,38 +22,30 @@ class Camera : public QObject
     Q_OBJECT
 public:
     using FnProcess = std::function<void(const QVideoFrame &)>;
-    constexpr static int w = 640;
-    constexpr static int h = 480;
 public:
     explicit Camera(QObject *parent = nullptr);
     ~Camera();
     void setProcess(const FnProcess &process_);
     void searchAndLock();
     void unlock();
-    static QImage imageFromVideoFrame(const QVideoFrame& buffer);
-signals:
-    void recordError();
-    void updateRecordTime(const QString &sec);
 public slots:
-    void start(int devID);
-    void restart(int devID);
+    void start(int id, int w, int h);
+    void restart(int id);
+    void resize(int w, int h);
     void stop();
-    void startRecord(const QString &videoPath);
-    void stopRecord();
-    void pauseRecord();
 private slots:
     void processFrame(const QVideoFrame &frame);
 public:
     static QList<QCameraInfo> infoList;
     QVector<QSize> resolutions;
+    int width;
+    int height;
 private:
+    int cameraID;
     QCamera *device;
     QVideoProbe *probe;
     QCameraImageCapture *imagecapture;
-    QMediaRecorder *recorder;
-    QThread recordThread;
     std::function<void(const QVideoFrame&)> process;
-    int id;
 };
 
 #endif // CAMERA_H

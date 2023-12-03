@@ -16,6 +16,18 @@ ImageViewer::~ImageViewer()
 
 void ImageViewer::display(const QPixmap &pixmap)
 {
+    QWidget* window = ui->imageWidget;
+    int w = window->width();
+    int h = window->height();
+    if (pixmap.width() >= w && pixmap.height() >= h) {
+        ui->imageLabel->resize(w, h);
+    } else if (pixmap.width() >= w && pixmap.height() < h) {
+        ui->imageLabel->resize(w, pixmap.height());
+    } else if (pixmap.width() < w && pixmap.height() >= h) {
+        ui->imageLabel->resize(pixmap.width(), h);
+    } else if (pixmap.width() < w && pixmap.height() < h) {
+        ui->imageLabel->resize(pixmap.width(), pixmap.height());
+    }
     ui->imageLabel->setPixmap(pixmap.scaled(ui->imageLabel->size()));
     return;
 }

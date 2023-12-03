@@ -7,15 +7,9 @@ Cascade::Cascade():hasLoadModel(false)
 
 bool Cascade::load(const std::string &path)
 {
-#ifdef Q_OS_ANDROID
     cv::String faceCascadeModel = cv::String(path) + "/haarcascade_frontalface_alt.xml";
     cv::String eyesCascadeModel = cv::String(path) + "/haarcascade_eye_tree_eyeglasses.xml";
     cv::String upperbodyCascadeModel = cv::String(path) + "/haarcascade_upperbody.xml";
-#else
-    cv::String faceCascadeModel = "/home/eigen/Downloads/opencv-4.5.5/data/haarcascades/haarcascade_frontalface_alt.xml";
-    cv::String eyesCascadeModel = "/home/eigen/Downloads/opencv-4.5.5/data/haarcascades/haarcascade_eye_tree_eyeglasses.xml";
-    cv::String upperbodyCascadeModel = "/home/eigen/Downloads/opencv-4.5.5/data/haarcascades/haarcascade_upperbody.xml";
-#endif
     if (faceCascade.load(faceCascadeModel) == false) {
         qDebug()<<"failed to load face cascade.";
         return false;

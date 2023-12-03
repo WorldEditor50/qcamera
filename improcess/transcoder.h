@@ -15,6 +15,7 @@ class Transcoder
 public:
     Transcoder();
     static QImage fromMat(const cv::Mat &src);
+    static QImage imageFromVideoFrame(const QVideoFrame& buffer);
     static int videoFrameToRGBA(QVideoFrame &frame, int &h, int &w, unsigned char *rgba);
     static int videoFrameToMat(QVideoFrame &frame, cv::Mat &img);
     static void nv21ToRGB24(unsigned char *yuyv, unsigned char *rgb, int width, int height);
