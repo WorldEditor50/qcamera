@@ -82,9 +82,13 @@ void Setting::updateConfigure()
     for (QSize &x : camera->resolutions) {
         ui->resComboBox->addItem(QString("%1x%2").arg(x.width()).arg(x.height()));
     }
+    int w = Configuration::instance().getCameraSize().width();
+    int h = Configuration::instance().getCameraSize().height();
+    QString res = QString("%1x%2").arg(w).arg(h);
+    ui->resComboBox->setCurrentText(res);
     connect(ui->resComboBox, &QComboBox::currentTextChanged,
             this, &Setting::onResolutionChanged);
     /* rtmp */
-    ui->streamUrlEdit->setText("rtsp://192.168.100.46/live/test");
+    ui->streamUrlEdit->setText("rtsp://192.168.1.100/live/test");
     return;
 }

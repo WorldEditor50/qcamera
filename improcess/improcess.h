@@ -28,6 +28,7 @@ public:
     static int yolov5(const cv::Mat &img, cv::Mat &out);
     static int yolov7(const cv::Mat &img, cv::Mat &out);
     static int opticalFlow(const cv::Mat &img, cv::Mat &out);
+    static int measure(const cv::Mat &img, cv::Mat &out);
 };
 
 #endif // IMAGEPROCESS_H

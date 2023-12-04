@@ -3,10 +3,10 @@
 
 ImageViewer::ImageViewer(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ImageViewer)
+    ui(new Ui::ImageViewer),touchCount(0)
 {
     ui->setupUi(this);
-    connect(ui->backBtn, &QPushButton::clicked, this, &ImageViewer::back);
+    ui->imageLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
 }
 
 ImageViewer::~ImageViewer()
@@ -30,4 +30,34 @@ void ImageViewer::display(const QPixmap &pixmap)
     }
     ui->imageLabel->setPixmap(pixmap.scaled(ui->imageLabel->size()));
     return;
+}
+
+void ImageViewer::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        emit back();
+    }
+    return QWidget::mouseDoubleClickEvent(event);
+}
+
+bool ImageViewer::event(QEvent *ev)
+{
+    switch (ev->type()) {
+    case QTouchEvent::TouchBegin:
+    case QTouchEvent::TouchUpdate:
+        ev->accept();
+        touchCount++;
+        update();
+        break;
+    case QTouchEvent::TouchEnd:
+        if (touchCount == 2) {
+            emit back();
+            touchCount = 0;
+        }
+        update();
+        break;
+    default:
+        break;
+    }
+    return QWidget::event(ev);
 }

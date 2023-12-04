@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QStandardPaths>
 #include <QString>
+#include <QSize>
 
 class Configuration
 {
@@ -16,6 +17,7 @@ private:
     QString videoFormat;
     QString captureStyle;
     int cameraID;
+    QSize cameraSize;
 public:
     static Configuration& instance()
     {
@@ -32,10 +34,11 @@ public:
     QString getVideoFormat() const {return videoFormat;}
     QString getCaptureStyle() const {return captureStyle;}
     int getCameraID() const {return cameraID;}
+    QSize getCameraSize() const {return cameraSize;}
     /* set */
     void setVideoFormat(const QString format);
     void setCaptureStyle(const QString style);
-    void setCameraID(int id) {cameraID = id;}
+    void setCameraParam(int id, int w, int h) {cameraID = id;cameraSize = QSize(w, h);}
 private:
     Configuration();
 };

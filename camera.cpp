@@ -38,15 +38,10 @@ void Camera::unlock()
 
 void Camera::start(int id, int w, int h)
 {
-    if (cameraID == id && width == w && height == h) {
-        return;
-    }
     cameraID = id;
     width = w;
     height = h;
-#ifdef Q_OS_ANDROID
-    Configuration::instance().setCameraID(id);
-#endif
+    Configuration::instance().setCameraParam(id, w, h);
     /* select camera */
     device = new QCamera(infoList.at(cameraID));
     probe = new QVideoProbe;
@@ -78,7 +73,6 @@ void Camera::start(int id, int w, int h)
     settings.setResolution(QSize(w, h));
     device->setViewfinderSettings(settings);
 
-
     /* focus */
     device->searchAndLock();
     QTimer::singleShot(500, Qt::PreciseTimer, this, [=](){
@@ -102,8 +96,16 @@ void Camera::resize(int w, int h)
     if (width == w && height == h) {
         return;
     }
-    stop();
-    start(cameraID, w, h);
+    Configuration::instance().setCameraParam(cameraID, w, h);
+    /* resolution */
+    QCameraViewfinderSettings settings;
+#ifdef Q_OS_ANDROID
+    settings.setPixelFormat(QVideoFrame::Format_NV21);
+#else
+    settings.setPixelFormat(QVideoFrame::Format_YUYV);
+#endif
+    settings.setResolution(QSize(w, h));
+    device->setViewfinderSettings(settings);
     return;
 }
 

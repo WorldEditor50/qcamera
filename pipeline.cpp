@@ -123,7 +123,9 @@ void Pipeline::run()
         /* record */
         Recorder::instance().rawEncode(out.data);
         /* stream */
-        RtmpPublisher::instance().encode(out.data);
+#if 0
+        RtspPublisher::instance().encode(out.data);
+#endif
     }
     std::cout<<"pipeline leave process"<<std::endl;
     return;

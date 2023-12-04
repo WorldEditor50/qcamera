@@ -174,18 +174,11 @@ public:
 private:
     Frame frame;
     RgbaRender render;
-public:
-    OpenGLWidget(QWidget *parent):QOpenGLWidget(parent){}
-    inline void setFrame(int h, int w, unsigned char *data)
-    {
-        frame.create(h, w, data);
-        update();
-        return;
-    }
+
 protected:
     void initializeGL() override
     {
-        connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &OpenGLWidget::clear);
+        //connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &OpenGLWidget::clear);
         render.initialize();
         return;
     }
@@ -207,6 +200,18 @@ protected:
         makeCurrent();
         render.clear();
         doneCurrent();
+        return;
+    }
+public:
+    explicit OpenGLWidget(QWidget *parent):QOpenGLWidget(parent){}
+    ~OpenGLWidget()
+    {
+        clear();
+    }
+    inline void setFrame(int h, int w, unsigned char *data)
+    {
+        frame.create(h, w, data);
+        update();
         return;
     }
 };

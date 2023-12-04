@@ -93,3 +93,44 @@ int Improcess::opticalFlow(const cv::Mat &img, cv::Mat &out)
     return 0;
 }
 
+int Improcess::measure(const cv::Mat &img, cv::Mat &out)
+{
+    out = cv::Mat(img);
+    /* convert to gray image */
+    cv::Mat gray;
+    cv::cvtColor(img, gray, cv::COLOR_RGB2GRAY);
+    cv::GaussianBlur(gray, gray, cv::Size(7, 7), 0);
+    /* detect edge */
+    cv::Mat edged;
+    cv::Canny(gray, edged, 50, 100);
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+    cv::erode(edged, edged, kernel);
+    cv::dilate(edged, edged, kernel);
+    /* find contours */
+    std::vector<std::vector<cv::Point> > contours;
+    std::vector<cv::Vec4i> hierarchy;
+    cv::findContours(edged, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    std::vector<int> indexes(contours.size());
+    std::vector<float> areas(contours.size());
+    for (std::size_t i = 0; i < contours.size(); i++) {
+        indexes[i] = i;
+        areas[i] = cv::contourArea(contours[i]);
+    }
+    std::sort(indexes.begin(), indexes.end(), [&](int i1, int i2)->bool {
+        return areas[i1] > areas[i2];
+    });
+    
+    for (int i : indexes) {
+        if (areas[i] < 200) {
+            continue;
+        }
+        cv::RotatedRect box = cv::minAreaRect(contours[i]);
+        std::vector<cv::Point> points;
+        cv::boxPoints(box, points);
+
+        cv::drawContours(out, contours, i, cv::Scalar(0, 255, 0), 2);
+
+    }
+    return 0;
+}
+

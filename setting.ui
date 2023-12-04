@@ -17,6 +17,9 @@
    <string notr="true"/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="verticalSpacing">
+    <number>20</number>
+   </property>
    <item row="2" column="1">
     <widget class="QLineEdit" name="streamUrlEdit">
      <property name="minimumSize">

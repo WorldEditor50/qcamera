@@ -9,12 +9,12 @@ MainWindow::MainWindow(QWidget *parent)
     , readyCapture(0)
 {
     ui->setupUi(this);
-    /* load qss */
-    setStyleSheet(QssLoader::get(":/qss/app-style.qss"));
     /* android permission */
     requestPermission();
     /* ffmepg network */
+#if 0
     RtspPublisher::instance().enableNetwork();
+#endif
     /* opengl */
 #if USE_OPENGL
     QSurfaceFormat format;
@@ -248,12 +248,10 @@ void MainWindow::stopStream()
 
 void MainWindow::launch()
 {
+    /* load qss */
+    setStyleSheet(QssLoader::get(":/qss/app-style.qss"));
     /* open camera */
-#ifdef Q_OS_ANDROID
-    camera->start(1, 640, 480);
-#else
     camera->start(0, 640, 480);
-#endif
     ui->settingWidget->setDevice(camera);
     /* pipeline */
     Pipeline::instance().start();
@@ -315,8 +313,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 #endif
     Pipeline::instance().stop();
-    camera->stop();
-    return QMainWindow::closeEvent(event);
+    camera->stop(); 
+    QMainWindow::closeEvent(event);
+#ifdef Q_OS_ANDROID
+    qApp->quit();
+#endif
+    return;
 }
 
 void MainWindow::createMenu()
@@ -334,9 +336,11 @@ void MainWindow::createMenu()
     ui->menu->addAction(settingAction);
 
     /* rotate screen */
+#if 0
     QAction *rotateScreenAction = new QAction(tr("Rotate"), this);
     connect(rotateScreenAction, &QAction::triggered, this, &MainWindow::onRotate);
     ui->menu->addAction(rotateScreenAction);
+#endif
     /* method */
     QAction *canny = new QAction(tr("canny"), this);
     connect(canny, &QAction::triggered, this, [=](){
@@ -400,12 +404,14 @@ void MainWindow::createMenu()
     connect(stopRecordAction, &QAction::triggered, this, &MainWindow::stopRecord);
     ui->menu->addAction(stopRecordAction);
     /* streaming */
+#if 0
     QAction *startStreamAction = new QAction(tr("start streaming"), this);
     connect(startStreamAction, &QAction::triggered, this, &MainWindow::startStream);
     ui->menu->addAction(startStreamAction);
     QAction *stopStreamAction = new QAction(tr("stop streaming"), this);
     connect(stopStreamAction, &QAction::triggered, this, &MainWindow::stopStream);
     ui->menu->addAction(stopStreamAction);
+#endif
     return;
 }
 

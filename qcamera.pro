@@ -1,7 +1,7 @@
 QT       += core gui multimedia multimediawidgets network
 QT       += concurrent sql opengl
 contains(ANDROID_TARGET_ARCH, arm64-v8a) {
-    QT       += androidextras
+    QT   += androidextras
 }
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
