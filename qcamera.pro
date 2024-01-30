@@ -53,14 +53,14 @@ contains(ANDROID_TARGET_ARCH, arm64-v8a) {
     INCLUDEPATH += $$PWD/libyuv/include
     LIBS += -L$$PWD/libyuv/lib/arm64-v8a -lyuv
     # opencv
-    #OPENCV_PATH = /home/eigen/Downloads/opencv-4.5.5-android-sdk/OpenCV-android-sdk/sdk/native
-    OPENCV_PATH = D:/home/3rdparty/opencv-4.7.0-android-sdk/OpenCV-android-sdk/sdk/native
+    OPENCV_PATH = D:/home/3rdparty/opencv-4.8.0-android-sdk/OpenCV-android-sdk/sdk/native
     INCLUDEPATH += $$OPENCV_PATH/jni/include
     LIBS += -L$$OPENCV_PATH/libs/arm64-v8a -lopencv_java4
     # ncnn
     NCNN_PATH = $$PWD/ncnn/arm64-v8a
     INCLUDEPATH += $$NCNN_PATH/include/ncnn
     LIBS += -L$$NCNN_PATH/lib -lncnn
+
     # ffmpeg
     FFMPEG_PATH = $$PWD/ffmpeg/arm64-v8a
     INCLUDEPATH += $$FFMPEG_PATH/include

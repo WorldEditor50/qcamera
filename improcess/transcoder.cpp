@@ -91,7 +91,7 @@ int Transcoder::videoFrameToRGBA(QVideoFrame &frame, int &h, int &w, unsigned ch
     return ret;
 }
 
-int Transcoder::videoFrameToMat(QVideoFrame &frame, cv::Mat &img)
+int Transcoder::videoFrameToMat(QVideoFrame &frame, cv::Mat &img, bool isRotate)
 {
     frame.map(QAbstractVideoBuffer::ReadOnly);
     int w = frame.width();
@@ -118,7 +118,9 @@ int Transcoder::videoFrameToMat(QVideoFrame &frame, cv::Mat &img)
     frame.unmap();
     cv::cvtColor(img, img, cv::COLOR_RGBA2BGR);
 #ifdef Q_OS_ANDROID
-    cv::rotate(img, img, cv::ROTATE_90_CLOCKWISE);
+    if (isRotate == true) {
+        cv::rotate(img, img, cv::ROTATE_90_CLOCKWISE);
+    }
 #endif
     return ret;
 }

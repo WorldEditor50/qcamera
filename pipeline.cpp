@@ -58,6 +58,7 @@ Pipeline::Pipeline()
     mapper.insert(std::pair<int, FnProcess>(PROCESS_SOBEL, &Improcess::sobel));
     mapper.insert(std::pair<int, FnProcess>(PROCESS_LAPLACE, &Improcess::laplace));
     mapper.insert(std::pair<int, FnProcess>(PROCESS_OPTICALFLOW, &Improcess::opticalFlow));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_MEASSURE, &Improcess::measure));
     mapper.insert(std::pair<int, FnProcess>(PROCESS_CASCADE, &Improcess::haarcascade));
     mapper.insert(std::pair<int, FnProcess>(PROCESS_YOLOV5, &Improcess::yolov5));
     mapper.insert(std::pair<int, FnProcess>(PROCESS_YOLOV7, &Improcess::yolov7));
@@ -92,7 +93,7 @@ void Pipeline::run()
         }
         /* transcode */
         cv::Mat img;
-        int ret = Transcoder::videoFrameToMat(frame, img);
+        int ret = Transcoder::videoFrameToMat(frame, img, Configuration::instance().isRotate());
         if (ret != 0) {
             continue;
         }

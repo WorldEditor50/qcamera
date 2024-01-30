@@ -1,19 +1,8 @@
 #include "configuration.h"
+#include <opencv2/imgproc.hpp>
 
 void Configuration::load()
 {
-    /* yolov4 */
-    QString yolov4Param = QString("%1/yolov4-tiny-opt.param").arg(modelPath);
-    if (QFile(yolov4Param).exists() == false) {
-        QFile::copy(":/yolo/ncnn/models/yolov4-tiny-opt.param", yolov4Param);
-        QFile::setPermissions(yolov4Param, QFileDevice::ReadOther);
-    }
-    QString yolov4Model = QString("%1/yolov4-tiny-opt.bin").arg(modelPath);
-    if (QFile(yolov4Model).exists() == false) {
-        QFile::copy(":/yolo/ncnn/models/yolov4-tiny-opt.bin", yolov4Model);
-        QFile::setPermissions(yolov4Model, QFileDevice::ReadOther);
-    }
-
     /* yolov5 */
     QString yolov5Param = QString("%1/yolov5s_6.0.param").arg(modelPath);
     if (QFile(yolov5Param).exists() == false) {
@@ -60,20 +49,9 @@ void Configuration::load()
     return;
 }
 
-void Configuration::setVideoFormat(const QString format)
-{
-    videoFormat = format;
-    return;
-}
-
-void Configuration::setCaptureStyle(const QString style)
-{
-    captureStyle = style;
-    return;
-}
-
 Configuration::Configuration()
 {
+    isRoateFrame = true;
     storagePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
     /* app data */
     appDataPath = QString("%1/qcamera").arg(storagePath);

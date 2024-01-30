@@ -17,7 +17,10 @@ private:
     QString videoFormat;
     QString captureStyle;
     int cameraID;
+    bool isRoateFrame;
     QSize cameraSize;
+private:
+    Configuration();
 public:
     static Configuration& instance()
     {
@@ -34,13 +37,13 @@ public:
     QString getVideoFormat() const {return videoFormat;}
     QString getCaptureStyle() const {return captureStyle;}
     int getCameraID() const {return cameraID;}
+    inline bool isRotate() const { return isRoateFrame; }
     QSize getCameraSize() const {return cameraSize;}
     /* set */
-    void setVideoFormat(const QString format);
-    void setCaptureStyle(const QString style);
+    void setVideoFormat(const QString &format) {videoFormat = format;}
+    void setCaptureStyle(const QString &style) {captureStyle = style;}
     void setCameraParam(int id, int w, int h) {cameraID = id;cameraSize = QSize(w, h);}
-private:
-    Configuration();
+    void rotate() { isRoateFrame = isRoateFrame ? false : true;}
 };
 
 #endif // CONFIGURATION_H

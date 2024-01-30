@@ -1,5 +1,5 @@
 #include "improcess.h"
-
+#include "utils.h"
 int Improcess::color(const cv::Mat &img, cv::Mat &out)
 {
     out = cv::Mat(img);
@@ -99,37 +99,63 @@ int Improcess::measure(const cv::Mat &img, cv::Mat &out)
     /* convert to gray image */
     cv::Mat gray;
     cv::cvtColor(img, gray, cv::COLOR_RGB2GRAY);
-    cv::GaussianBlur(gray, gray, cv::Size(7, 7), 0);
-    /* detect edge */
-    cv::Mat edged;
-    cv::Canny(gray, edged, 50, 100);
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-    cv::erode(edged, edged, kernel);
-    cv::dilate(edged, edged, kernel);
+    /* filter noise */
+    cv::GaussianBlur(gray, gray, cv::Size(3, 3), 0);
+    /* threshold */
+    cv::Mat mask;
+    cv::threshold(gray, mask, 0, 255, cv::THRESH_OTSU|cv::THRESH_BINARY_INV);
+    /* dilate */
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_DILATE, cv::Size(7, 7));
+    cv::dilate(mask, mask, kernel);
+    kernel = cv::getStructuringElement(cv::MORPH_ERODE, cv::Size(7, 7));
+    cv::erode(mask, mask, kernel);
     /* find contours */
     std::vector<std::vector<cv::Point> > contours;
-    std::vector<cv::Vec4i> hierarchy;
-    cv::findContours(edged, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    std::vector<int> indexes(contours.size());
-    std::vector<float> areas(contours.size());
+    cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    double s = img.rows*img.cols;
     for (std::size_t i = 0; i < contours.size(); i++) {
-        indexes[i] = i;
-        areas[i] = cv::contourArea(contours[i]);
-    }
-    std::sort(indexes.begin(), indexes.end(), [&](int i1, int i2)->bool {
-        return areas[i1] > areas[i2];
-    });
-    
-    for (int i : indexes) {
-        if (areas[i] < 200) {
+        double area = cv::contourArea(contours[i]);
+        if (area < 400 || std::abs(area - s) < 50) {
             continue;
         }
         cv::RotatedRect box = cv::minAreaRect(contours[i]);
-        std::vector<cv::Point> points;
+        cv::Mat points;
+        /* bottom left, top left, top right, bottom right */
         cv::boxPoints(box, points);
-
-        cv::drawContours(out, contours, i, cv::Scalar(0, 255, 0), 2);
-
+        std::vector<cv::Point2i> vertices = {
+            cv::Point2i(points.at<float>(0, 0), points.at<float>(0, 1)),
+            cv::Point2i(points.at<float>(1, 0), points.at<float>(1, 1)),
+            cv::Point2i(points.at<float>(2, 0), points.at<float>(2, 1)),
+            cv::Point2i(points.at<float>(3, 0), points.at<float>(3, 1))};
+        /* messure */
+        float d1 = utils::euclid(vertices[0], vertices[1]);
+        float d2 = utils::euclid(vertices[1], vertices[2]);
+        /* draw vertex */
+        for (std::size_t j = 0; j < vertices.size(); j++) {
+            cv::circle(out, vertices[j], 8, cv::Scalar(0, 0, 255), -1);
+        }
+        /* line vertex */
+        cv::line(out, vertices[0], vertices[1], cv::Scalar(0, 255, 0), 2);
+        cv::line(out, vertices[1], vertices[2], cv::Scalar(0, 255, 0), 2);
+        cv::line(out, vertices[2], vertices[3], cv::Scalar(0, 255, 0), 2);
+        cv::line(out, vertices[3], vertices[0], cv::Scalar(0, 255, 0), 2);
+        /* draw midpoints */
+        std::vector<cv::Point2i> midpoints(4);
+        midpoints[0] = (vertices[0] + vertices[1])/2;
+        midpoints[1] = (vertices[1] + vertices[2])/2;
+        midpoints[2] = (vertices[2] + vertices[3])/2;
+        midpoints[3] = (vertices[3] + vertices[0])/2;
+        for (std::size_t j = 0; j < midpoints.size(); j++) {
+            cv::circle(img, midpoints[j], 8, cv::Scalar(255, 0, 0), -1);
+        }
+        /* line midpoint */
+        cv::line(out, midpoints[0], midpoints[2], cv::Scalar(255, 0, 255), 2);
+        cv::line(out, midpoints[1], midpoints[3], cv::Scalar(255, 0, 255), 2);
+        /* draw messure */
+        cv::putText(out, std::to_string(d1), midpoints[0],
+                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255));
+        cv::putText(out, std::to_string(d2), midpoints[1],
+                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255));
     }
     return 0;
 }

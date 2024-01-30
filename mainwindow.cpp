@@ -335,12 +335,12 @@ void MainWindow::createMenu()
     connect(settingAction, &QAction::triggered, this, [=](){setPage(PAGE_SETTINGS);});
     ui->menu->addAction(settingAction);
 
-    /* rotate screen */
-#if 0
-    QAction *rotateScreenAction = new QAction(tr("Rotate"), this);
-    connect(rotateScreenAction, &QAction::triggered, this, &MainWindow::onRotate);
-    ui->menu->addAction(rotateScreenAction);
-#endif
+    /* rotate */
+    QAction *rotateAction = new QAction(tr("Rotate"), this);
+    connect(rotateAction, &QAction::triggered, this, [=](){
+        Configuration::instance().rotate();
+    });
+    ui->menu->addAction(rotateAction);
     /* method */
     QAction *canny = new QAction(tr("canny"), this);
     connect(canny, &QAction::triggered, this, [=](){
@@ -385,6 +385,13 @@ void MainWindow::createMenu()
         statusBar()->showMessage("opticalFlow");
     });
     ui->menu->addAction(opticalFlow);
+
+    QAction *measure = new QAction(tr("measure"), this);
+    connect(measure, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_MEASSURE);
+        statusBar()->showMessage("measure");
+    });
+    ui->menu->addAction(measure);
 
     QAction *linear = new QAction(tr("color"), this);
     connect(linear, &QAction::triggered, this, [=](){

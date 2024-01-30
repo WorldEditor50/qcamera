@@ -17,7 +17,7 @@ public:
     static QImage fromMat(const cv::Mat &src);
     static QImage imageFromVideoFrame(const QVideoFrame& buffer);
     static int videoFrameToRGBA(QVideoFrame &frame, int &h, int &w, unsigned char *rgba);
-    static int videoFrameToMat(QVideoFrame &frame, cv::Mat &img);
+    static int videoFrameToMat(QVideoFrame &frame, cv::Mat &img, bool isRotate);
     static void nv21ToRGB24(unsigned char *yuyv, unsigned char *rgb, int width, int height);
     static void yuv420pToRGB24(unsigned char *yuv420p, unsigned char *rgb24, int width, int height);
     static void yuyvToRGB24(unsigned char *yuv_buffer,unsigned char *rgb_buffer,int iWidth,int iHeight);

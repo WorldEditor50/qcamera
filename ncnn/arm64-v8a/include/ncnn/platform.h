@@ -20,6 +20,7 @@
 #define NCNN_SIMPLEOCV 0
 #define NCNN_SIMPLEOMP 0
 #define NCNN_SIMPLESTL 0
+#define NCNN_SIMPLEMATH 0
 #define NCNN_THREADS 1
 #define NCNN_BENCHMARK 0
 #define NCNN_C_API 1
@@ -31,6 +32,7 @@
 #define NCNN_VULKAN 1
 #define NCNN_SYSTEM_GLSLANG 0
 #define NCNN_RUNTIME_CPU 1
+#define NCNN_GNU_INLINE_ASM 1
 #define NCNN_AVX 0
 #define NCNN_XOP 0
 #define NCNN_FMA 0
@@ -42,7 +44,6 @@
 #define NCNN_AVX512BF16 0
 #define NCNN_AVX512FP16 0
 #define NCNN_VFPV4 1
-#if __aarch64__
 #define NCNN_ARM82 1
 #define NCNN_ARM82DOT 1
 #define NCNN_ARM82FP16FML 1
@@ -53,15 +54,15 @@
 #define NCNN_ARM86SVEBF16 1
 #define NCNN_ARM86SVEI8MM 1
 #define NCNN_ARM86SVEF32MM 1
-#endif // __aarch64__
 #define NCNN_MSA 0
+#define NCNN_LSX 0
 #define NCNN_MMI 0
 #define NCNN_RVV 0
 #define NCNN_INT8 1
 #define NCNN_BF16 1
 #define NCNN_FORCE_INLINE 1
 
-#define NCNN_VERSION_STRING "1.0.20220729"
+#define NCNN_VERSION_STRING "1.0.20231027"
 
 #include "ncnn_export.h"
 
@@ -243,6 +244,14 @@ private:
 #include <list>
 #include <vector>
 #include <string>
+#endif
+
+// simplemath
+#if NCNN_SIMPLEMATH
+#include "simplemath.h"
+#else
+#include <math.h>
+#include <fenv.h>
 #endif
 
 #endif // __cplusplus
