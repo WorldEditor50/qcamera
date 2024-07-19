@@ -70,11 +70,11 @@ contains(ANDROID_TARGET_ARCH, arm64-v8a) {
 
 unix {
     #libyuv
-    LIBYUV_PATH = /home/eigen/MySpace/3rdPartyLibrary/libyuv
+    LIBYUV_PATH = /home/galois/MySpace/3rdParty/libyuv
     INCLUDEPATH += $$LIBYUV_PATH/include
     LIBS += -L$$LIBYUV_PATH/lib -lyuv -ljpeg
     #opencv
-    OPENCV_PATH = /home/eigen/MySpace/3rdPartyLibrary/opencv452
+    OPENCV_PATH = /home/galois/MySpace/3rdParty/opencv47
     INCLUDEPATH += $$OPENCV_PATH/include/opencv4
     LIBS += -L$$OPENCV_PATH/lib -lopencv_calib3d \
                                 -lopencv_core \
@@ -92,11 +92,11 @@ unix {
                                 -lopencv_video \
                                 -lopencv_videoio
     # ncnn
-    NCNN_PATH = /home/eigen/MySpace/3rdPartyLibrary/ncnn
+    NCNN_PATH = /home/galois/MySpace/3rdParty/ncnn
     INCLUDEPATH += $$NCNN_PATH/include/ncnn
-    LIBS += -L$$NCNN_PATH/lib -lncnn
+    LIBS += -L$$NCNN_PATH/lib -lncnn -fopenmp
     # ffmpeg
-    FFMPEG_PATH = /home/eigen/MySpace/3rdPartyLibrary/ffmpeg-gpl-shared
+    FFMPEG_PATH = /home/galois/MySpace/3rdParty/ffmpeg-master-latest-linux64-gpl-shared
     INCLUDEPATH += $$FFMPEG_PATH/include
     LIBS += -L$$FFMPEG_PATH/lib -lavdevice \
                                 -lavfilter \

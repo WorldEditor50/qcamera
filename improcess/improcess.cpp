@@ -1,5 +1,7 @@
 #include "improcess.h"
 #include "utils.h"
+#include "kmeans.hpp"
+
 int Improcess::color(const cv::Mat &img, cv::Mat &out)
 {
     out = cv::Mat(img);
@@ -160,3 +162,42 @@ int Improcess::measure(const cv::Mat &img, cv::Mat &out)
     return 0;
 }
 
+int Improcess::cluster(const cv::Mat &img, cv::Mat &out)
+{
+    int h = img.rows;
+    int w = img.cols;
+    int c = img.channels();
+    Tensor x(h, w, c);
+    for (int i = 0; i < h; i++) {
+        for (int j = 0; j < w; j++) {
+            for (int k = 0; k < c; k++) {
+                x(i, j, k) = img.at<cv::Vec3b>(i, j)[k];
+            }
+        }
+    }
+    x.reshape(h*w, 3, 1);
+    std::vector<Tensor> xi;
+    x.toVector(xi);
+    Kmeans model(16, 3, [](const Tensor &x1, const Tensor &x2)->float{
+        return LinAlg::Kernel::laplace(x1, x2, 1.0);
+    });
+    model.cluster(xi, 3, 1e-2);
+    /* classify */
+    x.reshape(h, w, 3, 1);
+    out = cv::Mat::zeros(img.size(), CV_8UC3);
+    Tensor p(3, 1);
+    for (int i = 0; i < h; i++) {
+        for (int j = 0; j < w; j++) {
+            std::size_t pos = x.posOf(i, j);
+            p[0] = x[pos];
+            p[1] = x[pos + 1];
+            p[2] = x[pos + 2];
+            int ki = model(p);
+            Tensor &pixel = model.centers[ki];
+            for (int k = 0; k < c; k++) {
+                out.at<cv::Vec3b>(i, j)[k] = pixel[k];
+            }
+        }
+    }
+    return 0;
+}

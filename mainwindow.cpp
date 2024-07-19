@@ -73,9 +73,14 @@ MainWindow::MainWindow(QWidget *parent)
 #ifdef Q_OS_ANDROID
         QString modelPath = Configuration::instance().getModelPath();
         ret = Cascade::instance().load(modelPath.toStdString());
-#else
+#endif
+#ifdef Q_OS_WINDOWS
         QString modelPath = "D:/home/MyProject/qcamera/ncnn/models";
         ret = Cascade::instance().load("D:/home/MyProject/qcamera/data");
+#endif
+#ifdef Q_OS_LINUX
+        QString modelPath = "/home/galois/MySpace/model";
+        ret = Cascade::instance().load("/home/galois/MySpace/model");
 #endif
         ret = Yolov7::instance().load(QString("%1/yolov7-tiny").arg(modelPath).toStdString());
         ret = Yolov5::instance().load(QString("%1/yolov5s_6.0").arg(modelPath).toStdString());
@@ -366,6 +371,14 @@ void MainWindow::createMenu()
         statusBar()->showMessage("haarcascade");
     });
     ui->menu->addAction(haarcascade);
+
+    QAction *cluster = new QAction(tr("cluster"), this);
+    connect(cluster, &QAction::triggered, this, [=](){
+        Pipeline::instance().setFunc(PROCESS_CLUSTER);
+        statusBar()->showMessage("cluster");
+    });
+    ui->menu->addAction(cluster);
+
     QAction *yolov5 = new QAction(tr("yolov5"), this);
     connect(yolov5, &QAction::triggered, this, [=](){
         Pipeline::instance().setFunc(PROCESS_YOLOV5);

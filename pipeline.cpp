@@ -63,6 +63,7 @@ Pipeline::Pipeline()
     mapper.insert(std::pair<int, FnProcess>(PROCESS_YOLOV5, &Improcess::yolov5));
     mapper.insert(std::pair<int, FnProcess>(PROCESS_YOLOV7, &Improcess::yolov7));
     mapper.insert(std::pair<int, FnProcess>(PROCESS_COLOR, &Improcess::color));
+    mapper.insert(std::pair<int, FnProcess>(PROCESS_CLUSTER, &Improcess::cluster));
     /* function */
     funcIndex = PROCESS_COLOR;
 }
